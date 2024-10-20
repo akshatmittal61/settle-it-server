@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { dbUri } from "../config";
+import { dbUri } from "../constants";
 import { logger } from "../log";
 import mongoose from "mongoose";
 
