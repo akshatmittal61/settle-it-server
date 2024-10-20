@@ -15,3 +15,19 @@ export const getEnumeration = <T extends string>(
 	}, {} as any);
 	return enumeration;
 };
+
+/**
+ * Omits the given keys from the object.
+ * @param {Object} obj The object to omit keys from.
+ * @param {string[]} keys The keys to omit.
+ * @returns {Object} The new object with the omitted keys.
+ */
+export const omitKeys = (obj: any, keys: string[]): any => {
+	const newObj: any = {};
+	Object.keys(obj).forEach((key) => {
+		if (!keys.includes(key)) {
+			newObj[key] = obj[key];
+		}
+	});
+	return newObj;
+};
