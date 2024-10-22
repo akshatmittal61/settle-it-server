@@ -1,5 +1,6 @@
 export * from "./cache";
 export * from "./db";
+export * from "./email";
 export * from "./enum";
 export * from "./expense";
 export * from "./group";

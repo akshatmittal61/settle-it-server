@@ -1,0 +1,5 @@
+export type EMAIL_TEMPLATE =
+	| "OTP"
+	| "NEW_USER_ONBOARDED"
+	| "USER_INVITED"
+	| "USER_ADDED_TO_GROUP";
