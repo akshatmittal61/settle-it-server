@@ -1,6 +1,8 @@
-import { googleEmailConfig } from "../../config";
 import { createTransport } from "nodemailer";
+import { googleEmailConfig } from "../../config";
+import { T_EMAIL_TEMPLATE } from "../../types";
 import { myOAuth2Client } from "./client";
+import { getEmailTemplate } from "./template";
 
 export const sendEmailService = async (
 	to: string,
@@ -36,4 +38,14 @@ export const sendEmailService = async (
 		html,
 	};
 	await smtpTransport.sendMail(mailOptions);
+};
+
+export const sendEmailTemplate = async (
+	to: string,
+	subject: string,
+	template: T_EMAIL_TEMPLATE,
+	data: any
+) => {
+	const html = getEmailTemplate(template, data);
+	await sendEmailService(to, subject, html);
 };

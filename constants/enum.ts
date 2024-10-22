@@ -1,5 +1,6 @@
 import {
 	T_API_METHODS,
+	T_EMAIL_TEMPLATE,
 	T_EXPENSE_STATUS,
 	T_OTP_STATUS,
 	T_USER_STATUS,
@@ -23,4 +24,11 @@ export const apiMethods = getEnumeration<T_API_METHODS>([
 	"PUT",
 	"PATCH",
 	"DELETE",
+]);
+
+export const emailTemplates = getEnumeration<T_EMAIL_TEMPLATE>([
+	"OTP",
+	"NEW_USER_ONBOARDED",
+	"USER_INVITED",
+	"USER_ADDED_TO_GROUP",
 ]);

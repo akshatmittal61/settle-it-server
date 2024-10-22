@@ -1,4 +1,4 @@
-export type EMAIL_TEMPLATE =
+export type T_EMAIL_TEMPLATE =
 	| "OTP"
 	| "NEW_USER_ONBOARDED"
 	| "USER_INVITED"

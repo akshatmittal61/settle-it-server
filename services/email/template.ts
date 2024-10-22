@@ -1,6 +1,6 @@
 import { googleEmailConfig } from "../../config";
-import { frontendBaseUrl } from "../../constants";
-import { EMAIL_TEMPLATE } from "../../types";
+import { emailTemplates, frontendBaseUrl } from "../../constants";
+import { T_EMAIL_TEMPLATE } from "../../types";
 
 const getEmailTemplateHTML = (
 	title: string = "",
@@ -447,28 +447,28 @@ ${
 	return template;
 };
 
-export const getEmailTemplate = (template: EMAIL_TEMPLATE, data: any) => {
+export const getEmailTemplate = (template: T_EMAIL_TEMPLATE, data: any) => {
 	switch (template) {
-		case "OTP":
+		case emailTemplates.OTP:
 			return getEmailTemplateHTML(
 				"OTP requested for Login",
 				`Your OTP is ${data.otp}`
 			);
-		case "NEW_USER_ONBOARDED":
+		case emailTemplates.NEW_USER_ONBOARDED:
 			return getEmailTemplateHTML(
 				"Welcome to Settle It",
 				"Your account has been created successfully. You can now login to your account.",
 				"Login",
 				`${frontendBaseUrl}/login`
 			);
-		case "USER_INVITED":
+		case emailTemplates.USER_INVITED:
 			return getEmailTemplateHTML(
 				"Welcome to Settle It",
 				`<a href="mailto:${data.invitedBy.email}" style="color:inherit;text-decoration:none">${data.invitedBy.name}</a> has invited you to join Settle It. You can now login to your account.`,
 				"Login",
 				`${frontendBaseUrl}/login`
 			);
-		case "USER_ADDED_TO_GROUP":
+		case emailTemplates.USER_ADDED_TO_GROUP:
 			return getEmailTemplateHTML(
 				`Added to ${data.group.name}`,
 				`<a href="mailto:${data.invitedBy.email}" style="color:inherit;text-decoration:none">${data.invitedBy.name}</a> has added you to ${data.group.name}.`,
