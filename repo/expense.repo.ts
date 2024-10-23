@@ -106,6 +106,24 @@ class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 		const res = await this.model.deleteMany(query);
 		return res.deletedCount;
 	}
+
+	public async getExpensesForGroup(
+		groupId: string
+	): Promise<Array<IExpense>> {
+		const res = await this.model
+			.find<Expense>({ groupId })
+			.populate("paidBy createdBy groupId")
+			.populate({
+				path: "groupId",
+				populate: {
+					path: "members createdBy",
+				},
+			});
+		const expenses: Array<IExpense> = res
+			.map(this.parser)
+			.map(getNonNullValue);
+		return expenses;
+	}
 }
 
 export const expenseRepo = new ExpenseRepo();
