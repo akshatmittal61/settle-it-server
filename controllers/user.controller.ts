@@ -3,7 +3,7 @@ import { UserService } from "../services";
 import { ApiRequest, ApiResponse } from "../types";
 import { genericParse, getNonEmptyString } from "../utils";
 
-export class UserControllers {
+export class UserController {
 	public static async updateUserDetails(req: ApiRequest, res: ApiResponse) {
 		const id = genericParse<string>(getNonEmptyString, req.params.id);
 		const updatedUser = await UserService.updateUserDetails(id, req.body);

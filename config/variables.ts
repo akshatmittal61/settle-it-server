@@ -14,3 +14,6 @@ export const url: Record<T_URL, string> = {
 		process.env.NEXT_PUBLIC_BACKEND_BASE_URL ||
 		"http://localhost:3000/api/v1",
 };
+
+export const jwtSecret: string =
+	process.env.NEXT_PUBLIC_APP_JWT_SECRET || "secret";

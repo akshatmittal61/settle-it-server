@@ -7,11 +7,22 @@ import {
 } from "../constants";
 import { ApiError } from "../errors";
 import { userRepo } from "../repo";
-import { IUser } from "../types";
+import { CreateModel, IUser, User } from "../types";
 import { getNonNullValue } from "../utils";
 import { sendEmailTemplate } from "./email";
 
 export class UserService {
+	public static async findOrCreateUserByEmail(
+		email: string,
+		body: CreateModel<User>
+	): Promise<{ user: IUser; isNew: boolean }> {
+		const foundUser = await userRepo.findOne({ email });
+		if (foundUser) {
+			return { user: foundUser, isNew: false };
+		}
+		const createdUser = await userRepo.create(body);
+		return { user: createdUser, isNew: true };
+	}
 	public static async getUsersMapForUserIds(
 		userIds: string[]
 	): Promise<Map<string, IUser>> {
