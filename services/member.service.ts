@@ -1,8 +1,11 @@
-import { HTTP } from "../constants";
+import { getCacheKey } from "../cache";
+import { cacheParameter, HTTP } from "../constants";
 import { ApiError } from "../errors";
 import { expenseRepo, memberRepo } from "../repo";
-import { IMember } from "../types";
+import { IBalancesSummary, IMember } from "../types";
 import { ExpenseService } from "./expense.service";
+import { GroupService } from "./group.service";
+import { UserService } from "./user.service";
 
 export class MemberService {
 	public static async getMembersOfExpense(
@@ -54,5 +57,49 @@ export class MemberService {
 			);
 		}
 		await Promise.all([settlingProcesses]);
+	}
+	public static async settleOwedMembersInGroup({
+		userA,
+		userB,
+		groupId,
+		loggedInUserId,
+	}: {
+		userA: string;
+		userB: string;
+		groupId: string;
+		loggedInUserId: string;
+	}): Promise<IBalancesSummary["owes"]> {
+		if (loggedInUserId !== userA && loggedInUserId !== userB) {
+			throw new ApiError(
+				HTTP.status.FORBIDDEN,
+				"You can't settle someone else's expenses"
+			);
+		}
+		const foundGroup = await GroupService.getGroupById(groupId);
+		if (!foundGroup) {
+			throw new ApiError(HTTP.status.NOT_FOUND, "Group not found");
+		}
+		await MemberService.settleAllBetweenUsers(foundGroup.id, userA, userB);
+		const allTransactionsForGroup =
+			await memberRepo.getAllTransactionsSummaryForGroup(groupId);
+		// get all users in this group
+		const membersIds = Array.from(
+			new Set(
+				allTransactionsForGroup
+					.map((t) => t.from)
+					.concat(allTransactionsForGroup.map((t) => t.to))
+			)
+		);
+		const usersMap = await UserService.getUsersMapForUserIds(membersIds);
+		const owed = GroupService.getOwedBalances(
+			allTransactionsForGroup,
+			usersMap
+		);
+		cache.invalidate(
+			getCacheKey(cacheParameter.GROUP_EXPENSES, {
+				groupId: foundGroup.id,
+			})
+		);
+		return owed;
 	}
 }
