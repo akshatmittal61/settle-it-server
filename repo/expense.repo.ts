@@ -8,6 +8,7 @@ import {
 	Group,
 	IExpense,
 	IUser,
+	ObjectId,
 	UpdateQuery,
 } from "../types";
 import {
@@ -123,6 +124,33 @@ class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 			.map(this.parser)
 			.map(getNonNullValue);
 		return expenses;
+	}
+
+	public async getExpenditureForGroup(groupId: string): Promise<number> {
+		const result = await this.model.aggregate([
+			{
+				$match: {
+					groupId: new ObjectId(groupId),
+				},
+			},
+			{
+				$group: {
+					_id: "$groupId",
+					totalAmountSpent: { $sum: "$amount" },
+				},
+			},
+			{
+				$project: {
+					_id: 0,
+					groupId: "$_id",
+					totalAmountSpent: 1,
+				},
+			},
+		]);
+		if (result.length === 0) {
+			return 0;
+		}
+		return result[0].totalAmountSpent;
 	}
 }
 

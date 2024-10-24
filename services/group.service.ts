@@ -2,10 +2,17 @@ import { cache, getCacheKey } from "../cache";
 import { cacheParameter, HTTP } from "../constants";
 import { ApiError } from "../errors";
 import { expenseRepo, groupRepo, memberRepo, userRepo } from "../repo";
-import { IBalancesSummary, IGroup, IUser, Transaction } from "../types";
+import {
+	IBalancesSummary,
+	IGroup,
+	ITransaction,
+	IUser,
+	Transaction,
+} from "../types";
 import { getNonNullValue } from "../utils";
 import { sendEmailTemplate } from "./email";
 import { ExpenseService } from "./expense.service";
+import { UserService } from "./user.service";
 
 export class GroupService {
 	public static async clear(id: string): Promise<boolean> {
@@ -50,12 +57,14 @@ export class GroupService {
 	public static async getGroupDetailsForUser(
 		userId: string,
 		id: string
-	): Promise<IGroup | null> {
+	): Promise<IGroup> {
 		const group = await cache.fetch(
 			getCacheKey(cacheParameter.GROUP, { id }),
 			() => groupRepo.findById(id)
 		);
-		if (!group) return null;
+		if (!group) {
+			throw new ApiError(HTTP.status.NOT_FOUND, "Group not found");
+		}
 		if (!group.members.map((member) => member.id).includes(userId)) {
 			throw new ApiError(
 				HTTP.status.FORBIDDEN,
@@ -64,13 +73,9 @@ export class GroupService {
 		}
 		return group;
 	}
-	public static async getGroupExpenses(userId: string, groupId: string) {
-		const groupDetails = await GroupService.getGroupDetailsForUser(
-			userId,
-			groupId
-		);
+	public static async getGroupExpenses(groupId: string) {
 		const expenses = await ExpenseService.getExpensesForGroup(groupId);
-		if (!groupDetails || !expenses) return [];
+		if (!expenses) return [];
 		return expenses;
 	}
 	public static async sendInvitationToUsers(
@@ -106,7 +111,7 @@ export class GroupService {
 			})
 		);
 	}
-	public getOwedBalances(
+	public static getOwedBalances(
 		transactions: Array<Transaction>,
 		usersMap: Map<string, IUser>
 	): IBalancesSummary["owes"] {
@@ -240,7 +245,7 @@ export class GroupService {
 		return owesArray;
 	}
 
-	public getSummaryBalances(
+	public static getSummaryBalances(
 		transactions: Array<Transaction>,
 		usersMap: Map<string, IUser>
 	): IBalancesSummary["balances"] {
@@ -388,5 +393,43 @@ export class GroupService {
 			});
 
 		return balancesArray;
+	}
+	public static async getGroupSummary(groupId: string): Promise<{
+		expenditure: number;
+		balances: IBalancesSummary;
+	}> {
+		const [expenditure, allTransactionsForGroup] = await Promise.all([
+			expenseRepo.getExpenditureForGroup(groupId),
+			memberRepo.getAllTransactionsSummaryForGroup(groupId),
+		]);
+		// get all users in this group
+		const membersIds = Array.from(
+			new Set(
+				allTransactionsForGroup
+					.map((t) => t.from)
+					.concat(allTransactionsForGroup.map((t) => t.to))
+			)
+		);
+		const usersMap = await UserService.getUsersMapForUserIds(membersIds);
+		const balances = {
+			owes: GroupService.getOwedBalances(
+				allTransactionsForGroup,
+				usersMap
+			),
+			balances: GroupService.getSummaryBalances(
+				allTransactionsForGroup,
+				usersMap
+			),
+		};
+		return { expenditure, balances };
+	}
+	public static async getAllGroupTransactions(
+		groupId: string
+	): Promise<{ expenditure: number; transactions: Array<ITransaction> }> {
+		const [expenditure, transactions] = await Promise.all([
+			expenseRepo.getExpenditureForGroup(groupId),
+			memberRepo.getAllTransactionsForGroup(groupId),
+		]);
+		return { expenditure, transactions };
 	}
 }
