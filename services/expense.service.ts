@@ -1,6 +1,7 @@
 import { cache, getCacheKey } from "../cache";
-import { cacheParameter } from "../constants";
-import { expenseRepo, groupRepo } from "../repo";
+import { cacheParameter, HTTP } from "../constants";
+import { ApiError } from "../errors";
+import { expenseRepo, groupRepo, memberRepo } from "../repo";
 import { IExpense } from "../types";
 
 export class ExpenseService {
@@ -26,5 +27,38 @@ export class ExpenseService {
 		);
 		if (!expenses) return [];
 		return expenses;
+	}
+	public static async settleMemberInExpense({
+		expenseId,
+		memberId,
+		loggedInUserId,
+	}: {
+		expenseId: string;
+		memberId: string;
+		loggedInUserId: string;
+	}) {
+		const foundExpense = await expenseRepo.findById(expenseId);
+		if (!foundExpense) throw new Error("Expense not found");
+		if (foundExpense.paidBy.id !== loggedInUserId) {
+			throw new ApiError(
+				HTTP.status.FORBIDDEN,
+				"You did not paid for this expense"
+			);
+		}
+		const settledMember = await memberRepo.settleOne({
+			expenseId,
+			userId: memberId,
+		});
+		if (!settledMember)
+			throw new ApiError(HTTP.status.NOT_FOUND, "Member not found");
+		cache.invalidate(
+			getCacheKey(cacheParameter.GROUP_EXPENSES, {
+				groupId: foundExpense.group.id,
+			})
+		);
+		cache.invalidate(
+			getCacheKey(cacheParameter.EXPENSE, { id: foundExpense.id })
+		);
+		return settledMember;
 	}
 }

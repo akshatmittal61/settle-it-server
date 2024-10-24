@@ -1,6 +1,19 @@
+import { HTTP } from "../constants";
+import { ApiError } from "../errors";
 import { expenseRepo, memberRepo } from "../repo";
+import { IMember } from "../types";
 
 export class MemberService {
+	public static async getMembersOfExpense(
+		expenseId: string
+	): Promise<Array<IMember>> {
+		const foundExpense = await expenseRepo.findById(expenseId);
+		if (!foundExpense)
+			throw new ApiError(HTTP.status.NOT_FOUND, "Expense not found");
+		const foundMembers = await memberRepo.find({ expenseId });
+		if (!foundMembers) return [];
+		return foundMembers;
+	}
 	public static async settleAllBetweenUsers(
 		group: string,
 		userA: string,
