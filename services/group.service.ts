@@ -3,6 +3,8 @@ import { cacheParameter, HTTP } from "../constants";
 import { ApiError } from "../errors";
 import { expenseRepo, groupRepo, memberRepo, userRepo } from "../repo";
 import {
+	CreateModel,
+	Group,
 	IBalancesSummary,
 	IGroup,
 	ITransaction,
@@ -15,7 +17,7 @@ import { ExpenseService } from "./expense.service";
 import { UserService } from "./user.service";
 
 export class GroupService {
-	public static async clear(id: string): Promise<boolean> {
+	private static async clear(id: string): Promise<boolean> {
 		const group = await groupRepo.findById(id);
 		if (!group) return false;
 		await Promise.all([
@@ -24,7 +26,7 @@ export class GroupService {
 		]);
 		return true;
 	}
-	public static async addMembers(
+	private static async addMembers(
 		groupId: string,
 		newMembers: Array<string>
 	): Promise<IGroup | null> {
@@ -34,7 +36,7 @@ export class GroupService {
 		);
 		return updatedGroup;
 	}
-	public static async removeMembers(
+	private static async removeMembers(
 		groupId: string,
 		members: Array<string>
 	): Promise<IGroup | null> {
@@ -54,21 +56,38 @@ export class GroupService {
 		if (!groups) return [];
 		return groups;
 	}
-	public static async getGroupDetailsForUser(
-		userId: string,
-		id: string
-	): Promise<IGroup> {
+	public static async getGroupDetails(groupId: string) {
 		const group = await cache.fetch(
-			getCacheKey(cacheParameter.GROUP, { id }),
-			() => groupRepo.findById(id)
+			getCacheKey(cacheParameter.GROUP, { id: groupId }),
+			() => groupRepo.findById(groupId)
 		);
 		if (!group) {
 			throw new ApiError(HTTP.status.NOT_FOUND, "Group not found");
 		}
+		return group;
+	}
+	public static async getGroupDetailsForUser(
+		userId: string,
+		groupId: string
+	): Promise<IGroup> {
+		const group = await GroupService.getGroupDetails(groupId);
 		if (!group.members.map((member) => member.id).includes(userId)) {
 			throw new ApiError(
 				HTTP.status.FORBIDDEN,
 				"User is not a member of this group"
+			);
+		}
+		return group;
+	}
+	public static async getGroupDetailsForAdmin(
+		userId: string,
+		groupId: string
+	): Promise<IGroup> {
+		const group = await GroupService.getGroupDetails(groupId);
+		if (group.createdBy.id !== userId) {
+			throw new ApiError(
+				HTTP.status.FORBIDDEN,
+				"User is not an admin of this group"
 			);
 		}
 		return group;
@@ -110,6 +129,169 @@ export class GroupService {
 				);
 			})
 		);
+	}
+	public static async createGroup({
+		body,
+		authorId,
+	}: {
+		body: CreateModel<Group>;
+		authorId: string;
+	}): Promise<IGroup> {
+		if (!body.members.includes(authorId)) {
+			body.members.push(authorId);
+		}
+		if (body.members.length <= 1) {
+			throw new ApiError(
+				HTTP.status.BAD_REQUEST,
+				"Group must have at least 2 members"
+			);
+		}
+		const foundGroup = await groupRepo.findOne({
+			name: body.name,
+			createdBy: authorId,
+		});
+		if (foundGroup) {
+			throw new ApiError(
+				HTTP.status.CONFLICT,
+				"Group with this name with already exists"
+			);
+		}
+		cache.invalidate(
+			getCacheKey(cacheParameter.USER_GROUPS, {
+				userId: authorId,
+			})
+		);
+		const createdGroup = await groupRepo.create(body);
+		await GroupService.sendInvitationToUsers(
+			{ name: createdGroup.name, id: createdGroup.id },
+			body.members.filter((m) => m !== authorId),
+			authorId
+		);
+		return createdGroup;
+	}
+	public static async updateGroupDetails({
+		groupId,
+		authorId,
+		updateBody,
+	}: {
+		groupId: string;
+		authorId: string;
+		updateBody: Partial<Group>;
+	}) {
+		const foundGroup = await GroupService.getGroupDetailsForUser(
+			authorId,
+			groupId
+		);
+		if (updateBody.members) {
+			if (!updateBody.members.includes(authorId)) {
+				updateBody.members.push(authorId);
+			}
+			// get removed members list
+			const removedMembers = foundGroup.members
+				.map((member) => member.id)
+				.filter((member) => !updateBody.members!.includes(member));
+			if (removedMembers.length > 0) {
+				// check is removed user have any pending transactions
+				const pendingTransactions = await memberRepo.find({
+					userId: { $in: removedMembers },
+					groupId,
+					owed: { $gt: 0 },
+				});
+				if (!pendingTransactions) {
+					GroupService.removeMembers(groupId, removedMembers);
+				} else if (pendingTransactions.length > 0) {
+					throw new ApiError(
+						HTTP.status.BAD_REQUEST,
+						"One (or more) removed users have pending transactions"
+					);
+				}
+			}
+		}
+		cache.invalidate(
+			getCacheKey(cacheParameter.USER_GROUPS, { userId: authorId })
+		);
+		cache.invalidate(getCacheKey(cacheParameter.GROUP, { id: groupId }));
+		const updatedGroup = await groupRepo.update(
+			{ id: groupId },
+			updateBody
+		);
+		return updatedGroup;
+	}
+	public static async deleteGroup({
+		groupId,
+		loggedInUserId,
+	}: {
+		groupId: string;
+		loggedInUserId: string;
+	}) {
+		await GroupService.getGroupDetailsForAdmin(loggedInUserId, groupId);
+		await GroupService.clear(groupId);
+		const deletedGroup = await groupRepo.remove({ id: groupId });
+		cache.del(getCacheKey(cacheParameter.GROUP_EXPENSES, { groupId }));
+		cache.invalidate(
+			getCacheKey(cacheParameter.USER_GROUPS, { userId: loggedInUserId })
+		);
+		cache.del(getCacheKey(cacheParameter.GROUP, { id: groupId }));
+		return deletedGroup;
+	}
+	public static async addMembersInGroup({
+		groupId,
+		loggedInUserId,
+		members,
+	}: {
+		groupId: string;
+		loggedInUserId: string;
+		members: Array<string>;
+	}) {
+		const foundGroup = await GroupService.getGroupDetailsForAdmin(
+			loggedInUserId,
+			groupId
+		);
+		const membersToAdd = members.filter(
+			(member) =>
+				!foundGroup.members.map((member) => member.id).includes(member)
+		);
+		const updatedGroup = await GroupService.addMembers(
+			groupId,
+			membersToAdd
+		);
+		cache.invalidate(
+			getCacheKey(cacheParameter.GROUP_EXPENSES, { groupId })
+		);
+		cache.invalidate(
+			getCacheKey(cacheParameter.USER_GROUPS, { userId: loggedInUserId })
+		);
+		cache.invalidate(getCacheKey(cacheParameter.GROUP, { id: groupId }));
+		return updatedGroup;
+	}
+	public static async removeMembersFromGroup({
+		groupId,
+		loggedInUserId,
+		members,
+	}: {
+		groupId: string;
+		loggedInUserId: string;
+		members: Array<string>;
+	}) {
+		const foundGroup = await GroupService.getGroupDetailsForAdmin(
+			loggedInUserId,
+			groupId
+		);
+		const membersToRemove = members.filter((member) =>
+			foundGroup.members.map((member) => member.id).includes(member)
+		);
+		const updatedGroup = await GroupService.removeMembers(
+			groupId,
+			membersToRemove
+		);
+		cache.invalidate(
+			getCacheKey(cacheParameter.GROUP_EXPENSES, { groupId })
+		);
+		cache.invalidate(
+			getCacheKey(cacheParameter.USER_GROUPS, { userId: loggedInUserId })
+		);
+		cache.invalidate(getCacheKey(cacheParameter.GROUP, { id: groupId }));
+		return updatedGroup;
 	}
 	public static getOwedBalances(
 		transactions: Array<Transaction>,
@@ -244,7 +426,6 @@ export class GroupService {
 
 		return owesArray;
 	}
-
 	public static getSummaryBalances(
 		transactions: Array<Transaction>,
 		usersMap: Map<string, IUser>
