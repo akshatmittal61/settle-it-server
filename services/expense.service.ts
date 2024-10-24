@@ -5,6 +5,13 @@ import { expenseRepo, groupRepo, memberRepo } from "../repo";
 import { IExpense } from "../types";
 
 export class ExpenseService {
+	public static async getExpenseById(id: string): Promise<IExpense | null> {
+		const expense = await cache.fetch(
+			getCacheKey(cacheParameter.EXPENSE, { id }),
+			() => expenseRepo.findById(id)
+		);
+		return expense;
+	}
 	public static async getExpensesForUser(
 		userId: string
 	): Promise<Array<IExpense>> {
@@ -37,7 +44,7 @@ export class ExpenseService {
 		memberId: string;
 		loggedInUserId: string;
 	}) {
-		const foundExpense = await expenseRepo.findById(expenseId);
+		const foundExpense = await ExpenseService.getExpenseById(expenseId);
 		if (!foundExpense) throw new Error("Expense not found");
 		if (foundExpense.paidBy.id !== loggedInUserId) {
 			throw new ApiError(

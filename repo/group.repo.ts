@@ -1,5 +1,3 @@
-import { getCacheKey } from "../cache";
-import { cacheParameter } from "../constants";
 import { GroupModel } from "../models";
 import {
 	CreateModel,
@@ -36,18 +34,14 @@ class GroupRepo extends BaseRepo<Group, IGroup> {
 	}
 
 	public async findById(id: string): Promise<IGroup | null> {
-		const res = await cache.fetch(
-			getCacheKey(cacheParameter.GROUP, { id }),
-			() =>
-				this.model
-					.findById<Group>(id)
-					.populate("members createdBy")
-					.then(this.parser)
-					.catch((error: any) => {
-						if (error.kind === "ObjectId") return null;
-						throw error;
-					})
-		);
+		const res = await this.model
+			.findById<Group>(id)
+			.populate("members createdBy")
+			.then(this.parser)
+			.catch((error: any) => {
+				if (error.kind === "ObjectId") return null;
+				throw error;
+			});
 		return res;
 	}
 
@@ -91,7 +85,6 @@ class GroupRepo extends BaseRepo<Group, IGroup> {
 		const res = await this.model
 			.findOneAndDelete(filter)
 			.populate("members createdBy");
-		if (res) cache.del(getCacheKey(cacheParameter.GROUP, { id: res.id }));
 		return this.parser(res);
 	}
 }

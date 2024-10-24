@@ -12,6 +12,13 @@ import { getNonNullValue } from "../utils";
 import { sendEmailTemplate } from "./email";
 
 export class UserService {
+	public static async getUserById(id: string): Promise<User | null> {
+		const user = await cache.fetch(
+			getCacheKey(cacheParameter.USER, { id }),
+			() => userRepo.findById(id)
+		);
+		return user;
+	}
 	public static async findOrCreateUserByEmail(
 		email: string,
 		body: CreateModel<User>
@@ -57,7 +64,7 @@ export class UserService {
 		return res;
 	}
 	public static async invite(email: string, invitedBy: string) {
-		const invitedByUser = await userRepo.findById(invitedBy);
+		const invitedByUser = await UserService.getUserById(invitedBy);
 		await sendEmailTemplate(
 			email,
 			"Invite to Settle It",
@@ -74,7 +81,7 @@ export class UserService {
 		id: string,
 		update: Partial<IUser>
 	): Promise<IUser | null> {
-		const foundUser = await userRepo.findById(id);
+		const foundUser = await UserService.getUserById(id);
 		if (!foundUser) return null;
 		const keysToUpdate = ["name", "phone", "avatar"];
 		const updatedBody: any = {};
@@ -121,11 +128,11 @@ export class UserService {
 				"You cannot invite yourself"
 			);
 		}
-		const userExists = await userRepo.findById(invitee);
+		const userExists = await UserService.getUserById(invitee);
 		if (userExists) {
 			throw new ApiError(HTTP.status.CONFLICT, "User already exists");
 		}
-		const invitedByUser = await userRepo.findById(invitedByUserId);
+		const invitedByUser = await UserService.getUserById(invitedByUserId);
 		if (!invitedByUser) {
 			throw new ApiError(
 				HTTP.status.NOT_FOUND,

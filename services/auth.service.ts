@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
-import { cache, getCacheKey } from "../cache";
 import { jwtSecret } from "../config";
-import { cacheParameter, HTTP, OTP_STATUS, USER_STATUS } from "../constants";
+import { HTTP, OTP_STATUS, USER_STATUS } from "../constants";
 import { ApiError } from "../errors";
 import { logger } from "../log";
 import { otpRepo, userRepo } from "../repo";
@@ -17,10 +16,7 @@ export class AuthService {
 		try {
 			const decoded: any = jwt.verify(token, jwtSecret);
 			const userId = genericParse(getNonEmptyString, decoded.id);
-			const foundUser = await cache.fetch(
-				getCacheKey(cacheParameter.USER, { id: userId }),
-				() => userRepo.findById(userId)
-			);
+			const foundUser = await UserService.getUserById(userId);
 			return foundUser;
 		} catch (error) {
 			logger.error(error);

@@ -1,5 +1,3 @@
-import { getCacheKey } from "../cache";
-import { cacheParameter } from "../constants";
 import { ExpenseModel } from "../models";
 import {
 	CreateModel,
@@ -44,18 +42,14 @@ class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 	}
 
 	public async findById(id: string): Promise<IExpense | null> {
-		const res = await cache.fetch(
-			getCacheKey(cacheParameter.EXPENSE, { id }),
-			() =>
-				this.model
-					.findById<Expense>(id)
-					.populate("groupId paidBy createdBy")
-					.then(this.parser)
-					.catch((error: any) => {
-						if (error.kind === "ObjectId") return null;
-						throw error;
-					})
-		);
+		const res = await this.model
+			.findById<Expense>(id)
+			.populate("groupId paidBy createdBy")
+			.then(this.parser)
+			.catch((error: any) => {
+				if (error.kind === "ObjectId") return null;
+				throw error;
+			});
 		return res;
 	}
 

@@ -2,12 +2,13 @@ import { HTTP } from "../constants";
 import { ApiError } from "../errors";
 import { expenseRepo, memberRepo } from "../repo";
 import { IMember } from "../types";
+import { ExpenseService } from "./expense.service";
 
 export class MemberService {
 	public static async getMembersOfExpense(
 		expenseId: string
 	): Promise<Array<IMember>> {
-		const foundExpense = await expenseRepo.findById(expenseId);
+		const foundExpense = await ExpenseService.getExpenseById(expenseId);
 		if (!foundExpense)
 			throw new ApiError(HTTP.status.NOT_FOUND, "Expense not found");
 		const foundMembers = await memberRepo.find({ expenseId });

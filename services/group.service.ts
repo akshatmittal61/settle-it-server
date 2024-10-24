@@ -17,8 +17,15 @@ import { ExpenseService } from "./expense.service";
 import { UserService } from "./user.service";
 
 export class GroupService {
+	public static async getGroupById(id: string): Promise<IGroup | null> {
+		const group = await cache.fetch(
+			getCacheKey(cacheParameter.GROUP, { id }),
+			() => groupRepo.findById(id)
+		);
+		return group;
+	}
 	private static async clear(id: string): Promise<boolean> {
-		const group = await groupRepo.findById(id);
+		const group = await GroupService.getGroupById(id);
 		if (!group) return false;
 		await Promise.all([
 			memberRepo.bulkRemove({ groupId: id }),
@@ -57,10 +64,7 @@ export class GroupService {
 		return groups;
 	}
 	public static async getGroupDetails(groupId: string) {
-		const group = await cache.fetch(
-			getCacheKey(cacheParameter.GROUP, { id: groupId }),
-			() => groupRepo.findById(groupId)
-		);
+		const group = await GroupService.getGroupById(groupId);
 		if (!group) {
 			throw new ApiError(HTTP.status.NOT_FOUND, "Group not found");
 		}
@@ -102,7 +106,7 @@ export class GroupService {
 		users: Array<string>,
 		invitedBy: string
 	): Promise<void> {
-		const invitedByUser = await userRepo.findById(invitedBy);
+		const invitedByUser = await UserService.getUserById(invitedBy);
 		const allUsers = await userRepo.find({ _id: { $in: users } });
 		if (!allUsers || !invitedByUser || !group) {
 			throw new ApiError(
