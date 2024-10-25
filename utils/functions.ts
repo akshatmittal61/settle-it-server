@@ -31,3 +31,19 @@ export const omitKeys = (obj: any, keys: string[]): any => {
 	});
 	return newObj;
 };
+
+/**
+ * Checks if the given subset is a subset of the given superset.
+ * @example
+ * isSubset([1, 2], [1, 2, 3]) // true
+ * isSubset([1, 2, 4], [1, 2, 3]) // false
+ * @param {Array<T>} subset The subset to check.
+ * @param {Array<T>} superset The superset to check against.
+ * @returns {boolean} If the subset is a subset of the superset.
+ */
+export const isSubset = <T = any>(
+	subset: Array<T>,
+	superset: Array<T>
+): boolean => {
+	return subset.every((value) => superset.includes(value));
+};
