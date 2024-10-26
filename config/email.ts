@@ -1,3 +1,7 @@
+import { config } from "dotenv";
+
+config();
+
 type GOOGLE_MAIL_SERVICE_KEYS =
 	| "clientId"
 	| "clientSecret"

@@ -1,16 +1,18 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import { PORT } from "./config";
 import { HTTP } from "./constants";
 import { db } from "./db";
 import { logger } from "./log";
+import { errorHandler } from "./middlewares";
 import { apiRouter } from "./routes";
+import { ApiRequest, ApiResponse } from "./types";
 
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/api/v1/health", (_: Request, res: Response) => {
+app.get("/api/health", (_: ApiRequest, res: ApiResponse) => {
 	try {
 		if (db.isReady() === false) {
 			throw new Error("Database connection failed");
@@ -26,6 +28,7 @@ app.get("/api/v1/health", (_: Request, res: Response) => {
 });
 
 app.use("/api/v1", apiRouter);
+app.use(errorHandler);
 
 const init = async () => {
 	logger.info(`Server listening on port ${PORT}`);

@@ -1,8 +1,10 @@
-import { Router } from "express";
-import { authRouter } from "./auth";
+import { AuthController } from "../controllers";
+import { router, wrapper } from "./base";
+import { authMiddleware } from "../middlewares";
 
-const router = Router();
+router.route("/auth/otp/request").post(AuthController.requestOtp);
+router.route("/auth/login").post(AuthController.login);
+router.route("/auth/verify").get(authMiddleware, AuthController.verify);
+router.route("/auth/logout").get(authMiddleware, AuthController.logout);
 
-router.use("/auth", authRouter);
-
-export { router as apiRouter };
+export const apiRouter = wrapper(router);
