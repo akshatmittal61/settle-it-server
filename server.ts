@@ -3,7 +3,7 @@ import { PORT } from "./config";
 import { HTTP } from "./constants";
 import { db } from "./db";
 import { logger } from "./log";
-import { errorHandler } from "./middlewares";
+import { errorHandler, parseCookies } from "./middlewares";
 import { apiRouter } from "./routes";
 import { ApiRequest, ApiResponse } from "./types";
 
@@ -11,6 +11,7 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(parseCookies);
 
 app.get("/api/health", (_: ApiRequest, res: ApiResponse) => {
 	try {
