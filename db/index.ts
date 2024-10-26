@@ -16,15 +16,17 @@ global.mongoose = global.mongoose || {
 };
 
 class DatabaseManager {
-	private static isIntervalSet = false;
-	private static intervalId: any = null;
 	constructor() {
 		this.connect();
 	}
 
 	private ping(): boolean {
 		try {
-			if (!global.mongoose.conn || !global.mongoose.conn.connection.db) {
+			if (
+				!global.mongoose.conn ||
+				!global.mongoose.conn.connection.db ||
+				global.mongoose.conn.connections[0].readyState !== 1
+			) {
 				logger.info("MongoDB is not connected");
 				this.connect();
 				return false;
@@ -55,44 +57,10 @@ class DatabaseManager {
 					heartbeatFrequencyMS: 10000,
 				});
 				logger.debug("Connecting to MongoDB");
-				// await new Promise<void>((resolve) => {
-				// 	mongoose.connection.once("connected", () => {
-				// 		logger.info("MongoDB connected in cb");
-				// 		resolve();
-				// 	});
-				// 	mongoose.connection.on("error", (error: any) => {
-				// 		logger.error(
-				// 			"Error connecting to MongoDB in cb",
-				// 			error.message
-				// 		);
-				// 		resolve();
-				// 		// reject(error);
-				// 	});
-				// }).then(() => {
-				// 	global.mongoose.conn = mongoose;
-				// 	if (!DatabaseManager.isIntervalSet) {
-				// 		DatabaseManager.isIntervalSet = true;
-				// 		DatabaseManager.intervalId = setInterval(
-				// 			() => this.ping(),
-				// 			10000
-				// 		);
-				// 	}
-				// });
-				// const conn = await mongoose.connect(dbUri, {
-				// 	heartbeatFrequencyMS: 10000,
-				// });
-				// global.mongoose.conn = conn;
 				global.mongoose.conn = await global.mongoose.promise;
 				await new Promise<void>((resolve) => {
 					mongoose.connection.once("connected", () => {
 						logger.info("MongoDB connected in cb");
-						if (!DatabaseManager.isIntervalSet) {
-							DatabaseManager.isIntervalSet = true;
-							DatabaseManager.intervalId = setInterval(
-								() => this.ping(),
-								10000
-							);
-						}
 						resolve();
 					});
 					mongoose.connection.on("error", (error: any) => {
@@ -101,7 +69,6 @@ class DatabaseManager {
 							error.message
 						);
 						resolve();
-						// reject(error);
 					});
 				});
 				return global.mongoose.conn;
@@ -112,7 +79,6 @@ class DatabaseManager {
 				);
 				global.mongoose.conn = null;
 				global.mongoose.promise = null;
-				clearInterval(DatabaseManager.intervalId);
 				return null;
 			}
 		}
@@ -120,9 +86,6 @@ class DatabaseManager {
 	}
 
 	public async disconnect() {
-		if (DatabaseManager.intervalId) {
-			clearInterval(DatabaseManager.intervalId);
-		}
 		if (!global.mongoose.conn) {
 			logger.info("MongoDB is already disconnected");
 			return;
