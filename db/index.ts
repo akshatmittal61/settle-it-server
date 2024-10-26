@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
+import mongoose from "mongoose";
 import { dbUri } from "../constants";
 import { logger } from "../log";
-import mongoose from "mongoose";
 
 declare global {
 	var mongoose: {
@@ -20,19 +20,15 @@ class DatabaseManager {
 	private static intervalId: any = null;
 	constructor() {
 		this.connect();
-		if (!DatabaseManager.isIntervalSet) {
-			DatabaseManager.isIntervalSet = true;
-			DatabaseManager.intervalId = setInterval(() => this.ping(), 10000);
-		}
 	}
 
-	private ping() {
-		if (!global.mongoose.conn || !global.mongoose.conn.connection.db) {
-			logger.info("MongoDB is not connected");
-			this.connect();
-			return false;
-		}
+	private ping(): boolean {
 		try {
+			if (!global.mongoose.conn || !global.mongoose.conn.connection.db) {
+				logger.info("MongoDB is not connected");
+				this.connect();
+				return false;
+			}
 			global.mongoose.conn.connection.db.command({ ping: 1 });
 			logger.info("MongoDB ping succeeded");
 			return true;
@@ -43,28 +39,84 @@ class DatabaseManager {
 	}
 
 	public async connect() {
-		if (global.mongoose.conn && global.mongoose.conn.connection.db) {
+		if (
+			global.mongoose.conn &&
+			global.mongoose.conn.connection.db &&
+			global.mongoose.conn.connections[0].readyState === 1
+		) {
 			logger.info("MongoDB is already connected");
 			return global.mongoose.conn;
 		}
 
 		if (!global.mongoose.promise || !global.mongoose.conn) {
-			mongoose.set("strictQuery", true);
-			global.mongoose.promise = mongoose.connect(dbUri, {
-				heartbeatFrequencyMS: 10000,
-			});
 			try {
-				logger.info("Connecting to MongoDB");
+				mongoose.set("strictQuery", true);
+				global.mongoose.promise = mongoose.connect(dbUri, {
+					heartbeatFrequencyMS: 10000,
+				});
+				logger.debug("Connecting to MongoDB");
+				// await new Promise<void>((resolve) => {
+				// 	mongoose.connection.once("connected", () => {
+				// 		logger.info("MongoDB connected in cb");
+				// 		resolve();
+				// 	});
+				// 	mongoose.connection.on("error", (error: any) => {
+				// 		logger.error(
+				// 			"Error connecting to MongoDB in cb",
+				// 			error.message
+				// 		);
+				// 		resolve();
+				// 		// reject(error);
+				// 	});
+				// }).then(() => {
+				// 	global.mongoose.conn = mongoose;
+				// 	if (!DatabaseManager.isIntervalSet) {
+				// 		DatabaseManager.isIntervalSet = true;
+				// 		DatabaseManager.intervalId = setInterval(
+				// 			() => this.ping(),
+				// 			10000
+				// 		);
+				// 	}
+				// });
+				// const conn = await mongoose.connect(dbUri, {
+				// 	heartbeatFrequencyMS: 10000,
+				// });
+				// global.mongoose.conn = conn;
 				global.mongoose.conn = await global.mongoose.promise;
-				logger.info("MongoDB connected");
+				await new Promise<void>((resolve) => {
+					mongoose.connection.once("connected", () => {
+						logger.info("MongoDB connected in cb");
+						if (!DatabaseManager.isIntervalSet) {
+							DatabaseManager.isIntervalSet = true;
+							DatabaseManager.intervalId = setInterval(
+								() => this.ping(),
+								10000
+							);
+						}
+						resolve();
+					});
+					mongoose.connection.on("error", (error: any) => {
+						logger.error(
+							"Error connecting to MongoDB in cb",
+							error.message
+						);
+						resolve();
+						// reject(error);
+					});
+				});
 				return global.mongoose.conn;
-			} catch (error) {
-				logger.error("Error connecting to MongoDB", error);
+			} catch (error: any) {
+				logger.error(
+					"Error connecting to MongoDB in connect",
+					error.message
+				);
 				global.mongoose.conn = null;
 				global.mongoose.promise = null;
-				throw error;
+				clearInterval(DatabaseManager.intervalId);
+				return null;
 			}
 		}
+		return global.mongoose.conn;
 	}
 
 	public async disconnect() {

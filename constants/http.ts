@@ -1,4 +1,4 @@
-const message = {
+const message = Object.freeze({
 	SUCCESS: "Success",
 	ERROR: "Error",
 	NOT_FOUND: "Not Found",
@@ -10,7 +10,7 @@ const message = {
 	HEALTHY_API: "API is healthy",
 	HEALTHY_DB: "DB is healthy",
 	DB_CONNECTION_ERROR: "Unable to connect to database",
-};
+});
 
 const status = Object.freeze({
 	SUCCESS: 200,
