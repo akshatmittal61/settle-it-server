@@ -17,6 +17,10 @@ import { ExpenseService } from "./expense.service";
 import { UserService } from "./user.service";
 
 export class GroupService {
+	public static async getAllGroups(): Promise<Array<IGroup>> {
+		const groups = await groupRepo.findAll();
+		return groups;
+	}
 	public static async getGroupById(id: string): Promise<IGroup | null> {
 		const group = await cache.fetch(
 			getCacheKey(cacheParameter.GROUP, { id }),

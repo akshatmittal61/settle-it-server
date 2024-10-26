@@ -12,6 +12,10 @@ import { getNonNullValue } from "../utils";
 import { sendEmailTemplate } from "./email";
 
 export class UserService {
+	public static async getAllUsers(): Promise<Array<IUser>> {
+		const users = await userRepo.findAll();
+		return users;
+	}
 	public static async getUserById(id: string): Promise<User | null> {
 		const user = await cache.fetch(
 			getCacheKey(cacheParameter.USER, { id }),
