@@ -1,33 +1,20 @@
 import express from "express";
 import { PORT } from "./config";
-import { HTTP } from "./constants";
+import { ServerController } from "./controllers";
 import { db } from "./db";
 import { logger } from "./log";
-import { errorHandler, parseCookies } from "./middlewares";
+import { cors, errorHandler, parseCookies, useDb } from "./middlewares";
 import { apiRouter } from "./routes";
-import { ApiRequest, ApiResponse } from "./types";
 
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(parseCookies);
+app.use(cors);
 
-app.get("/api/health", (_: ApiRequest, res: ApiResponse) => {
-	try {
-		if (db.isReady() === false) {
-			throw new Error("Database connection failed");
-		}
-	} catch (error) {
-		return res
-			.status(HTTP.status.SERVICE_UNAVAILABLE)
-			.json({ message: HTTP.message.DB_CONNECTION_ERROR });
-	}
-	return res
-		.status(HTTP.status.SUCCESS)
-		.json({ message: HTTP.message.HEALTHY_API });
-});
-
+app.get("/api/health", ServerController.health);
+app.use(useDb);
 app.use("/api/v1", apiRouter);
 app.use(errorHandler);
 

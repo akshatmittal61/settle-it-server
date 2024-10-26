@@ -16,10 +16,6 @@ global.mongoose = global.mongoose || {
 };
 
 class DatabaseManager {
-	constructor() {
-		this.connect();
-	}
-
 	private ping(): boolean {
 		try {
 			if (
