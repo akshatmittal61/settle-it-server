@@ -4,6 +4,7 @@ import {
 	ExpenseController,
 	GroupController,
 	MemberController,
+	UserController,
 } from "../controllers";
 import { adminRoute, authenticatedRoute, isGroupMember } from "../middlewares";
 import { router, wrapper } from "./base";
@@ -13,11 +14,16 @@ router.route("/admin/groups").get(adminRoute, AdminController.getAllGroups);
 router.route("/admin/users").get(adminRoute, AdminController.getAllUsers);
 
 // Auth routes
-router.route("/auth/otp/request").post(AuthController.requestOtp);
-router.route("/auth/otp/verify").post(AuthController.verifyOtp);
 router.route("/auth/login").post(AuthController.login);
 router.route("/auth/verify").get(authenticatedRoute, AuthController.verify);
 router.route("/auth/logout").get(authenticatedRoute, AuthController.logout);
+router.route("/auth/otp/request").post(AuthController.requestOtp);
+router.route("/auth/otp/verify").post(AuthController.verifyOtp);
+
+// User routes
+router.route("/users").patch(UserController.updateUserDetails);
+router.route("/users/invite").patch(UserController.inviteUser);
+router.route("/users/search").patch(UserController.searchForUsers);
 
 // Group Routes
 router
@@ -33,10 +39,6 @@ router
 		GroupController.updateGroupDetails
 	)
 	.delete(authenticatedRoute, isGroupMember, GroupController.deleteGroup);
-router
-	.route("/groups/:groupId/expenses")
-	.get(authenticatedRoute, isGroupMember, GroupController.getGroupExpenses)
-	.post(authenticatedRoute, isGroupMember, ExpenseController.createExpense);
 router
 	.route("/groups/:groupId/summary")
 	.get(authenticatedRoute, isGroupMember, GroupController.getBalancesSummary);
@@ -56,6 +58,10 @@ router
 
 // Expense routes
 router
+	.route("/groups/:groupId/expenses")
+	.get(authenticatedRoute, isGroupMember, GroupController.getGroupExpenses)
+	.post(authenticatedRoute, isGroupMember, ExpenseController.createExpense);
+router
 	.route("/groups/:groupId/expenses/:expenseId")
 	.patch(authenticatedRoute, isGroupMember, ExpenseController.updateExpense)
 	.delete(authenticatedRoute, isGroupMember, ExpenseController.removeExpense);
@@ -71,9 +77,6 @@ router
 		isGroupMember,
 		MemberController.getMembersForExpense
 	);
-router
-	.route("/groups/:groupId/expenses/:expenseId/settle")
-	.patch(authenticatedRoute, isGroupMember, ExpenseController.settleExpense);
 router
 	.route("/groups/:groupId/expenses/:expenseId/settle/:memberId")
 	.patch(
