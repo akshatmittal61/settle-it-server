@@ -16,6 +16,13 @@ export class GroupController {
 			.status(HTTP.status.SUCCESS)
 			.json({ message: HTTP.message.SUCCESS, data: req.group });
 	}
+	public static async getGroupExpenses(req: ApiRequest, res: ApiResponse) {
+		const groupId = genericParse(getNonEmptyString, req.group?.id);
+		const expenses = await GroupService.getGroupExpenses(groupId);
+		return res
+			.status(HTTP.status.SUCCESS)
+			.json({ message: HTTP.message.SUCCESS, data: expenses });
+	}
 	public static async createGroup(req: ApiRequest, res: ApiResponse) {
 		const name = genericParse(getNonEmptyString, req.body.name);
 		const icon = safeParse(getNonEmptyString, req.body.icon) || "";
@@ -83,5 +90,18 @@ export class GroupController {
 			message: HTTP.message.SUCCESS,
 			data: allTransactionsForGroup,
 		});
+	}
+	public static async addMembers(req: ApiRequest, res: ApiResponse) {
+		const loggedInUserId = genericParse(getNonEmptyString, req.user?.id);
+		const groupId = genericParse(getNonEmptyString, req.group?.id);
+		const members = genericParse(getArray<string>, req.body.members);
+		const updatedGroup = await GroupService.addMembersInGroup({
+			loggedInUserId,
+			groupId,
+			members,
+		});
+		return res
+			.status(HTTP.status.SUCCESS)
+			.json({ message: HTTP.message.SUCCESS, data: updatedGroup });
 	}
 }

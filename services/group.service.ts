@@ -249,10 +249,22 @@ export class GroupService {
 			loggedInUserId,
 			groupId
 		);
+		if (members.length === 0) {
+			throw new ApiError(
+				HTTP.status.BAD_REQUEST,
+				"No members to add in group"
+			);
+		}
+		const existingMemberIds = foundGroup.members.map((member) => member.id);
 		const membersToAdd = members.filter(
-			(member) =>
-				!foundGroup.members.map((member) => member.id).includes(member)
+			(member) => !existingMemberIds.includes(member)
 		);
+		if (membersToAdd.length === 0) {
+			throw new ApiError(
+				HTTP.status.BAD_REQUEST,
+				"No new members to add in group"
+			);
+		}
 		const updatedGroup = await GroupService.addMembers(
 			groupId,
 			membersToAdd

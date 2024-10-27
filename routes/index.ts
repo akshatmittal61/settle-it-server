@@ -32,6 +32,9 @@ router
 	)
 	.delete(authenticatedRoute, isGroupMember, GroupController.deleteGroup);
 router
+	.route("/groups/:groupId/expenses")
+	.get(authenticatedRoute, isGroupMember, GroupController.getGroupExpenses);
+router
 	.route("/groups/:groupId/summary")
 	.get(authenticatedRoute, isGroupMember, GroupController.getBalancesSummary);
 router
