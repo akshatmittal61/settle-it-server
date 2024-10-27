@@ -142,7 +142,7 @@ export class GroupService {
 		body,
 		authorId,
 	}: {
-		body: CreateModel<Group>;
+		body: Omit<CreateModel<Group>, "createdBy">;
 		authorId: string;
 	}): Promise<IGroup> {
 		if (!body.members.includes(authorId)) {
@@ -154,22 +154,16 @@ export class GroupService {
 				"Group must have at least 2 members"
 			);
 		}
-		const foundGroup = await groupRepo.findOne({
-			name: body.name,
-			createdBy: authorId,
-		});
-		if (foundGroup) {
-			throw new ApiError(
-				HTTP.status.CONFLICT,
-				"Group with this name with already exists"
-			);
-		}
 		cache.invalidate(
 			getCacheKey(cacheParameter.USER_GROUPS, {
 				userId: authorId,
 			})
 		);
-		const createdGroup = await groupRepo.create(body);
+		const payload = {
+			...body,
+			createdBy: authorId,
+		};
+		const createdGroup = await groupRepo.create(payload);
 		await GroupService.sendInvitationToUsers(
 			{ name: createdGroup.name, id: createdGroup.id },
 			body.members.filter((m) => m !== authorId),

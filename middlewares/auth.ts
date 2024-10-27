@@ -1,7 +1,8 @@
 import { NextFunction } from "express";
 import { admins, HTTP } from "../constants";
-import { AuthService } from "../services";
+import { AuthService, GroupService } from "../services";
 import { ApiRequest, ApiResponse } from "../types";
+import { genericParse, getNonEmptyString } from "../utils";
 
 export const authenticatedRoute = async (
 	req: ApiRequest,
@@ -60,5 +61,35 @@ export const adminRoute = async (
 			.status(HTTP.status.UNAUTHORIZED)
 			.json({ message: "Token is not valid" });
 	}
-	return next();
+};
+
+export const isGroupMember = async (
+	req: ApiRequest,
+	res: ApiResponse,
+	next: NextFunction
+) => {
+	const loggedInUser = req.user;
+	if (!loggedInUser) {
+		return res
+			.status(HTTP.status.UNAUTHORIZED)
+			.json({ message: "Please login to continue" });
+	}
+	try {
+		const groupId = genericParse(getNonEmptyString, req.params.groupId);
+		const group = await GroupService.getGroupDetailsForUser(
+			loggedInUser.id,
+			groupId
+		);
+		if (!group) {
+			return res
+				.status(HTTP.status.FORBIDDEN)
+				.json({ message: "You are not a member of this group" });
+		}
+		req.group = group;
+		return next();
+	} catch (err) {
+		return res
+			.status(HTTP.status.FORBIDDEN)
+			.json({ message: "You are not a member of this group" });
+	}
 };

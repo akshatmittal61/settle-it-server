@@ -54,19 +54,22 @@ class DatabaseManager {
 				});
 				logger.debug("Connecting to MongoDB");
 				global.mongoose.conn = await global.mongoose.promise;
-				await new Promise<void>((resolve) => {
-					mongoose.connection.once("connected", () => {
-						logger.info("MongoDB connected in cb");
-						resolve();
+				if (global.mongoose.conn.connections[0].readyState != 1) {
+					await new Promise<void>((resolve) => {
+						mongoose.connection.once("connected", () => {
+							logger.info("MongoDB connected in cb");
+							resolve();
+						});
+						mongoose.connection.on("error", (error: any) => {
+							logger.error(
+								"Error connecting to MongoDB in cb",
+								error.message
+							);
+							resolve();
+						});
 					});
-					mongoose.connection.on("error", (error: any) => {
-						logger.error(
-							"Error connecting to MongoDB in cb",
-							error.message
-						);
-						resolve();
-					});
-				});
+				}
+				logger.info("MongoDB connected");
 				return global.mongoose.conn;
 			} catch (error: any) {
 				logger.error(
