@@ -48,9 +48,11 @@ export class ExpenseService {
 	}
 	public static async createExpense({
 		body,
+		loggedInUserId,
 		members,
 	}: {
-		body: CreateModel<Expense>;
+		body: Omit<CreateModel<Expense>, "createdBy">;
+		loggedInUserId: string;
 		members: Array<{ userId: string; amount: number }>;
 	}): Promise<IExpense> {
 		const totalDistributedAmount = members
@@ -67,13 +69,15 @@ export class ExpenseService {
 		const foundGroup = await GroupService.getGroupById(
 			body.groupId.toString()
 		);
-		if (!foundGroup)
+		if (!foundGroup) {
 			throw new ApiError(HTTP.status.NOT_FOUND, "Group not found");
+		}
+		const existingMemberIds = foundGroup.members.map((m) => m.id);
 		const includedMembers = members.filter((member) => member.amount > 0);
 		if (
-			includedMembers.some(
-				(member) =>
-					!foundGroup.members.map((m) => m.id).includes(member.userId)
+			!isSubset(
+				includedMembers.map((member) => member.userId),
+				existingMemberIds
 			)
 		) {
 			// check if all sent members are in the group
@@ -82,7 +86,8 @@ export class ExpenseService {
 				"Some members are not in the group"
 			);
 		}
-		const createdExpense = await expenseRepo.create(body);
+		const payload = { ...body, createdBy: loggedInUserId };
+		const createdExpense = await expenseRepo.create(payload);
 		// initially, all members are pending, and they have to pay the expense
 		const membersForCurrentExpense: Array<CreateModel<Member>> =
 			includedMembers.map((member) => ({
@@ -114,13 +119,13 @@ export class ExpenseService {
 	}: {
 		id: string;
 		loggedInUserId: string;
-		title: string | null;
-		amount: number | null;
-		paidBy: string | null;
-		paidOn: string | null;
-		description: string | null;
-		status: T_EXPENSE_STATUS | null;
-		members: Array<{ userId: string; amount: number }> | null;
+		title?: string | null;
+		amount?: number | null;
+		paidBy?: string | null;
+		paidOn?: string | null;
+		description?: string | null;
+		status?: T_EXPENSE_STATUS | null;
+		members?: Array<{ userId: string; amount: number }> | null;
 	}): Promise<IExpense> {
 		// if amount is updated, members should be sent as well for validation
 		if ((amount !== null || amount !== undefined) && members === null) {
@@ -129,7 +134,7 @@ export class ExpenseService {
 				HTTP.message.BAD_REQUEST
 			);
 		}
-		if (amount !== null && members !== null) {
+		if (amount !== null && members !== null && members !== undefined) {
 			const totalDistributedAmount = members
 				.map((member) => member.amount)
 				.reduce((a, b) => a + b, 0);
@@ -158,7 +163,7 @@ export class ExpenseService {
 		if (!foundGroup) {
 			throw new ApiError(HTTP.status.NOT_FOUND, "Group not found");
 		}
-		if (amount !== null && members !== null) {
+		if (amount !== null && members !== null && members !== undefined) {
 			// check if all sent members are in the group
 			if (
 				!isSubset(

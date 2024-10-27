@@ -1,7 +1,9 @@
 import {
 	AdminController,
 	AuthController,
+	ExpenseController,
 	GroupController,
+	MemberController,
 } from "../controllers";
 import { adminRoute, authenticatedRoute, isGroupMember } from "../middlewares";
 import { router, wrapper } from "./base";
@@ -33,12 +35,51 @@ router
 	.delete(authenticatedRoute, isGroupMember, GroupController.deleteGroup);
 router
 	.route("/groups/:groupId/expenses")
-	.get(authenticatedRoute, isGroupMember, GroupController.getGroupExpenses);
+	.get(authenticatedRoute, isGroupMember, GroupController.getGroupExpenses)
+	.post(authenticatedRoute, isGroupMember, ExpenseController.createExpense);
 router
 	.route("/groups/:groupId/summary")
 	.get(authenticatedRoute, isGroupMember, GroupController.getBalancesSummary);
 router
 	.route("/groups/:groupId/transactions")
 	.get(authenticatedRoute, isGroupMember, GroupController.getAllTransactions);
+router
+	.route("/groups/:groupId/members")
+	.post(authenticatedRoute, isGroupMember, GroupController.addMembers);
+router
+	.route("/groups/:groupId/members/settle")
+	.patch(
+		authenticatedRoute,
+		isGroupMember,
+		MemberController.settleOwedMembersInGroup
+	);
+
+// Expense routes
+router
+	.route("/groups/:groupId/expenses/:expenseId")
+	.patch(authenticatedRoute, isGroupMember, ExpenseController.updateExpense)
+	.delete(authenticatedRoute, isGroupMember, ExpenseController.removeExpense);
+router
+	.route("/groups/:groupId/expenses/:expenseId/settle")
+	.patch(authenticatedRoute, isGroupMember, ExpenseController.settleExpense);
+
+// Member routes
+router
+	.route("/groups/:groupId/expenses/:expenseId/members")
+	.get(
+		authenticatedRoute,
+		isGroupMember,
+		MemberController.getMembersForExpense
+	);
+router
+	.route("/groups/:groupId/expenses/:expenseId/settle")
+	.patch(authenticatedRoute, isGroupMember, ExpenseController.settleExpense);
+router
+	.route("/groups/:groupId/expenses/:expenseId/settle/:memberId")
+	.patch(
+		authenticatedRoute,
+		isGroupMember,
+		MemberController.settleMemberInExpense
+	);
 
 export const apiRouter = wrapper(router);
