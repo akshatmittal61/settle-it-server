@@ -5,7 +5,7 @@ import { genericParse, getNonEmptyString } from "../utils";
 
 export class UserController {
 	public static async updateUserDetails(req: ApiRequest, res: ApiResponse) {
-		const id = genericParse<string>(getNonEmptyString, req.params.id);
+		const id = genericParse<string>(getNonEmptyString, req.user?.id);
 		const updatedUser = await UserService.updateUserDetails(id, req.body);
 		return res
 			.status(HTTP.status.SUCCESS)

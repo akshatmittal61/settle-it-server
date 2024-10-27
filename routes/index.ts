@@ -21,9 +21,15 @@ router.route("/auth/otp/request").post(AuthController.requestOtp);
 router.route("/auth/otp/verify").post(AuthController.verifyOtp);
 
 // User routes
-router.route("/users").patch(UserController.updateUserDetails);
-router.route("/users/invite").patch(UserController.inviteUser);
-router.route("/users/search").patch(UserController.searchForUsers);
+router
+	.route("/users")
+	.patch(authenticatedRoute, UserController.updateUserDetails);
+router
+	.route("/users/invite")
+	.post(authenticatedRoute, UserController.inviteUser);
+router
+	.route("/users/search")
+	.post(authenticatedRoute, UserController.searchForUsers);
 
 // Group Routes
 router

@@ -1,4 +1,4 @@
-import { getCacheKey } from "../cache";
+import { cache, getCacheKey } from "../cache";
 import { cacheParameter, HTTP } from "../constants";
 import { ApiError } from "../errors";
 import { expenseRepo, memberRepo } from "../repo";

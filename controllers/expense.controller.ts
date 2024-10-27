@@ -57,9 +57,10 @@ export class ExpenseController {
 			title,
 			amount,
 			paidBy,
-			description,
 			paidOn,
+			description,
 			status,
+			members,
 		});
 		return res
 			.status(HTTP.status.SUCCESS)
