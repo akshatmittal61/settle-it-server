@@ -3,12 +3,14 @@ import { admins, HTTP } from "../constants";
 import { AuthService, GroupService } from "../services";
 import { ApiRequest, ApiResponse } from "../types";
 import { genericParse, getNonEmptyString } from "../utils";
+import { logger } from "../log";
 
 export const authenticatedRoute = async (
 	req: ApiRequest,
 	res: ApiResponse,
 	next: NextFunction
 ) => {
+	logger.debug("Cookies", req.cookies);
 	const token = req.cookies.token;
 	if (!token) {
 		return res
@@ -22,6 +24,7 @@ export const authenticatedRoute = async (
 				.status(HTTP.status.UNAUTHORIZED)
 				.json({ message: "Please login to continue" });
 		}
+		logger.debug("loggedInUser", loggedInUser);
 		req.user = loggedInUser;
 		return next();
 	} catch {

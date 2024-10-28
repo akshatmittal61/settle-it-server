@@ -46,7 +46,7 @@ export const useDb = (_: ApiRequest, res: ApiResponse, next: NextFunction) => {
 };
 
 export const tracer = (req: ApiRequest, _: ApiResponse, next: NextFunction) => {
-	logger.debug(req.method, req.path, req.params, req.body);
+	logger.debug(req.method, req.path, req.params, req.body, req.headers);
 	return next();
 };
 
