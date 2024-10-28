@@ -32,6 +32,7 @@ export class AuthController {
 			maxAge: 30 * 24 * 60 * 60 * 1000,
 			sameSite: "none",
 			secure: true,
+			partitioned: true,
 		});
 		const responseStatus = isNew
 			? HTTP.status.CREATED
