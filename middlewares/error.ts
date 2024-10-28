@@ -2,6 +2,7 @@ import { NextFunction } from "express";
 import { HTTP } from "../constants";
 import { ApiError, DbConnectionError, ParserSafetyError } from "../errors";
 import { ApiRequest, ApiResponse } from "../types";
+import { logger } from "../log";
 
 export const errorHandler = (
 	error: any,
@@ -9,6 +10,7 @@ export const errorHandler = (
 	res: ApiResponse,
 	next: NextFunction
 ) => {
+	logger.debug("Error caught at final handler", error);
 	if (res.headersSent) {
 		return next(error);
 	}

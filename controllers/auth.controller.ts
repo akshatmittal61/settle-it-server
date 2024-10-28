@@ -27,7 +27,12 @@ export class AuthController {
 		const email = genericParse(getNonEmptyString, req.body.email);
 		const otp = genericParse(getNonEmptyString, req.body.otp);
 		const { token, user, isNew } = await AuthService.login(email, otp);
-		res.setHeader("Set-Cookie", AuthService.getCookie(token));
+		res.cookie("token", token, {
+			httpOnly: true,
+			maxAge: 30 * 24 * 60 * 60 * 1000,
+			sameSite: "none",
+			secure: true,
+		});
 		const responseStatus = isNew
 			? HTTP.status.CREATED
 			: HTTP.status.SUCCESS;
@@ -42,7 +47,7 @@ export class AuthController {
 		});
 	}
 	public static async logout(_: ApiRequest, res: ApiResponse) {
-		res.setHeader("Set-Cookie", AuthService.getCookie("", true));
+		res.clearCookie("token");
 		return res
 			.status(HTTP.status.SUCCESS)
 			.json({ message: HTTP.message.SUCCESS });
