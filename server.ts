@@ -17,8 +17,8 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(parseCookies);
 app.use(tracer);
+app.use(parseCookies);
 app.use(cors);
 app.use(profiler);
 
