@@ -18,8 +18,8 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(parseCookies);
-app.use(cors);
 app.use(tracer);
+app.use(cors);
 app.use(profiler);
 
 app.get("/api/health", ServerController.health);
