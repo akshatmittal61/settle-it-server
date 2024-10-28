@@ -1,5 +1,5 @@
 import { NextFunction } from "express";
-import { domain, HTTP } from "../constants";
+import { frontendBaseUrl, HTTP } from "../constants";
 import { db } from "../db";
 import { logger } from "../log";
 import { ApiRequest, ApiResponse } from "../types";
@@ -22,18 +22,21 @@ export const parseCookies = (
 	return next();
 };
 
-export const cors = (_: ApiRequest, res: ApiResponse, next: NextFunction) => {
-	res.setHeader("Access-Control-Allow-Origin", domain);
+export const cors = (req: ApiRequest, res: ApiResponse, next: NextFunction) => {
+	res.setHeader("Access-Control-Allow-Origin", frontendBaseUrl);
 	res.setHeader(
 		"Access-Control-Allow-Methods",
-		"GET, POST, PUT, PATCH, DELETE"
+		"GET, POST, PUT, PATCH, DELETE, OPTIONS"
 	);
 	res.setHeader(
 		"Access-Control-Allow-Headers",
 		"X-Requested-With,content-type,Authorization"
 	);
 	res.setHeader("Access-Control-Allow-Credentials", "true");
-	next();
+	if (req.method === "OPTIONS") {
+		return res.sendStatus(HTTP.status.SUCCESS);
+	}
+	return next();
 };
 
 export const useDb = (_: ApiRequest, res: ApiResponse, next: NextFunction) => {
