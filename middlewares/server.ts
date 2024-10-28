@@ -1,5 +1,5 @@
 import { NextFunction } from "express";
-import { frontendBaseUrl, HTTP } from "../constants";
+import { domain, HTTP } from "../constants";
 import { db } from "../db";
 import { logger } from "../log";
 import { ApiRequest, ApiResponse } from "../types";
@@ -23,7 +23,7 @@ export const parseCookies = (
 };
 
 export const cors = (_: ApiRequest, res: ApiResponse, next: NextFunction) => {
-	res.setHeader("Access-Control-Allow-Origin", frontendBaseUrl);
+	res.setHeader("Access-Control-Allow-Origin", domain);
 	res.setHeader(
 		"Access-Control-Allow-Methods",
 		"GET, POST, PUT, PATCH, DELETE"
