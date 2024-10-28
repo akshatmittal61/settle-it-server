@@ -1,4 +1,5 @@
 import { NextFunction } from "express";
+import { default as corsMiddleware } from "cors";
 import { frontendBaseUrl, HTTP } from "../constants";
 import { db } from "../db";
 import { logger } from "../log";
@@ -22,22 +23,26 @@ export const parseCookies = (
 	return next();
 };
 
-export const cors = (req: ApiRequest, res: ApiResponse, next: NextFunction) => {
-	res.setHeader("Access-Control-Allow-Origin", frontendBaseUrl);
-	res.setHeader(
-		"Access-Control-Allow-Methods",
-		"GET, POST, PUT, PATCH, DELETE, OPTIONS"
-	);
-	res.setHeader(
-		"Access-Control-Allow-Headers",
-		"X-Requested-With,content-type,Authorization"
-	);
-	res.setHeader("Access-Control-Allow-Credentials", "true");
-	if (req.method === "OPTIONS") {
-		return res.sendStatus(HTTP.status.SUCCESS);
-	}
-	return next();
-};
+// export const cors = (req: ApiRequest, res: ApiResponse, next: NextFunction) => {
+// 	res.setHeader("Access-Control-Allow-Origin", frontendBaseUrl);
+// 	res.setHeader(
+// 		"Access-Control-Allow-Methods",
+// 		"GET, POST, PUT, PATCH, DELETE, OPTIONS"
+// 	);
+// 	res.setHeader(
+// 		"Access-Control-Allow-Headers",
+// 		"X-Requested-With,content-type,Authorization"
+// 	);
+// 	res.setHeader("Access-Control-Allow-Credentials", "true");
+// 	if (req.method === "OPTIONS") {
+// 		return res.sendStatus(HTTP.status.SUCCESS);
+// 	}
+// 	return next();
+// };
+export const cors = corsMiddleware({
+	origin: frontendBaseUrl,
+	credentials: true,
+});
 
 export const useDb = (_: ApiRequest, res: ApiResponse, next: NextFunction) => {
 	if (db.isReady() === false) {
