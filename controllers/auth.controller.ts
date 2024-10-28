@@ -27,13 +27,7 @@ export class AuthController {
 		const email = genericParse(getNonEmptyString, req.body.email);
 		const otp = genericParse(getNonEmptyString, req.body.otp);
 		const { token, user, isNew } = await AuthService.login(email, otp);
-		res.cookie("token", token, {
-			httpOnly: true,
-			maxAge: 30 * 24 * 60 * 60 * 1000,
-			sameSite: "none",
-			secure: true,
-			partitioned: true,
-		});
+		res.setHeader("x-auth-token", token);
 		const responseStatus = isNew
 			? HTTP.status.CREATED
 			: HTTP.status.SUCCESS;
