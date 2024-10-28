@@ -47,7 +47,7 @@ export class UserService {
 	}
 	public static async searchByEmail(
 		emailQuery: string
-	): Promise<Array<IUser> | null> {
+	): Promise<Array<IUser>> {
 		if (!emailQuery) {
 			throw new ApiError(
 				HTTP.status.BAD_REQUEST,
@@ -64,7 +64,7 @@ export class UserService {
 		const res = await userRepo.find({
 			email: { $regex: query, $options: "i" },
 		});
-		if (!res) return null;
+		if (!res) return [];
 		return res;
 	}
 	public static async invite(email: string, invitedBy: string) {
