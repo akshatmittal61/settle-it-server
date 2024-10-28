@@ -4,7 +4,7 @@ export const getObjectFromMongoResponse = <T>(response: any): T | null => {
 	}
 	const object = response.toObject ? response.toObject() : response;
 
-	// eslint-disable-next-line no-unused-vars
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const { _id, __v, createdAt, updatedAt, ...rest } = object;
 	const data = {
 		id: (_id ?? object.id).toString(),

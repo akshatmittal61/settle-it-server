@@ -75,7 +75,7 @@ class Cache {
 }
 
 declare global {
-	// eslint-disable-next-line no-unused-vars
+	// eslint-disable-next-line no-var
 	var cache: Cache;
 }
 

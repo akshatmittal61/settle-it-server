@@ -24,7 +24,7 @@ export const authenticatedRoute = async (
 		}
 		req.user = loggedInUser;
 		return next();
-	} catch (err) {
+	} catch {
 		return res
 			.status(HTTP.status.UNAUTHORIZED)
 			.json({ message: "Token is not valid" });
@@ -56,7 +56,7 @@ export const adminRoute = async (
 		}
 		req.user = loggedInUser;
 		return next();
-	} catch (err) {
+	} catch {
 		return res
 			.status(HTTP.status.UNAUTHORIZED)
 			.json({ message: "Token is not valid" });
@@ -87,7 +87,7 @@ export const isGroupMember = async (
 		}
 		req.group = group;
 		return next();
-	} catch (err) {
+	} catch {
 		return res
 			.status(HTTP.status.FORBIDDEN)
 			.json({ message: "You are not a member of this group" });

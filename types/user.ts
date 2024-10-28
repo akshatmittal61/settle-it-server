@@ -1,3 +1,3 @@
 import { User } from "./models";
 
-export interface IUser extends Omit<User, "createdAt" | "updatedAt"> {}
+export type IUser = Omit<User, "createdAt" | "updatedAt">;

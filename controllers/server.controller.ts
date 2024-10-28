@@ -8,7 +8,7 @@ export class ServerController {
 			if (db.isReady() === false) {
 				throw new Error("Database connection failed");
 			}
-		} catch (error) {
+		} catch {
 			return res
 				.status(HTTP.status.SERVICE_UNAVAILABLE)
 				.json({ message: HTTP.message.DB_CONNECTION_ERROR });

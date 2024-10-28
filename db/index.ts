@@ -1,9 +1,9 @@
-/* eslint-disable no-unused-vars */
 import mongoose from "mongoose";
 import { dbUri } from "../constants";
 import { logger } from "../log";
 
 declare global {
+	// eslint-disable-next-line no-var
 	var mongoose: {
 		conn: typeof import("mongoose") | null;
 		promise: Promise<typeof import("mongoose")> | null;
@@ -30,7 +30,7 @@ class DatabaseManager {
 			global.mongoose.conn.connection.db.command({ ping: 1 });
 			logger.info("MongoDB ping succeeded");
 			return true;
-		} catch (error) {
+		} catch {
 			logger.info("MongoDB ping failed");
 			return false;
 		}

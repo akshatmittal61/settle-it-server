@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
+import fs from "fs";
 import { logsBaseUrl } from "../constants";
 import { LOG_LEVEL } from "../types";
 
 const writeToFile = (dir: string, log: string) => {
 	try {
-		const fs = require("fs");
 		const date = new Date();
 		if (!fs.existsSync(dir)) {
 			fs.mkdirSync(dir);
