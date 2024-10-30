@@ -22,4 +22,15 @@ export class ServerController {
 			.status(HTTP.status.SUCCESS)
 			.json({ message: HTTP.message.HEALTHY_API, data: payload });
 	}
+	public static async heartbeat(_: ApiRequest, res: ApiResponse) {
+		const payload = {
+			identity: process.pid,
+			uptime: process.uptime(),
+			timestamp: new Date().toISOString(),
+			database: db.status(),
+		};
+		return res
+			.status(HTTP.status.SUCCESS)
+			.json({ message: HTTP.message.HEARTBEAT, data: payload });
+	}
 }

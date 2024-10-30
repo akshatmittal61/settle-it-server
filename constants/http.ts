@@ -10,6 +10,7 @@ const message = Object.freeze({
 	HEALTHY_API: "API is healthy",
 	HEALTHY_DB: "DB is healthy",
 	DB_CONNECTION_ERROR: "Unable to connect to database",
+	HEARTBEAT: "Heartbeat success",
 });
 
 const status = Object.freeze({
