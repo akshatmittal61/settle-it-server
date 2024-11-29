@@ -2,7 +2,7 @@ import express from "express";
 import { PORT } from "./config";
 import { ServerController } from "./controllers";
 import { db } from "./db";
-import { logger } from "./log";
+import { Logger } from "./log";
 import {
 	cors,
 	errorHandler,
@@ -29,13 +29,13 @@ app.use("/api/v1", apiRouter);
 app.use(errorHandler);
 
 const init = async () => {
-	logger.info(`Server listening on port ${PORT}`);
+	Logger.info(`Server listening on port ${PORT}`);
 	const connectionStatus = await db.connect();
 	if (connectionStatus) {
-		logger.info("MongoDB connected");
+		Logger.info("MongoDB connected");
 	} else {
-		logger.error("Database connection failed");
-		logger.info("Server is running without database");
+		Logger.error("Database connection failed");
+		Logger.info("Server is running without database");
 	}
 };
 

@@ -2,7 +2,7 @@ import { NextFunction } from "express";
 import { default as corsMiddleware } from "cors";
 import { frontendBaseUrl, HTTP } from "../constants";
 import { db } from "../db";
-import { logger } from "../log";
+import { Logger } from "../log";
 import { ApiRequest, ApiResponse } from "../types";
 
 export const parseCookies = (
@@ -54,7 +54,7 @@ export const useDb = (_: ApiRequest, res: ApiResponse, next: NextFunction) => {
 };
 
 export const tracer = (req: ApiRequest, _: ApiResponse, next: NextFunction) => {
-	logger.debug(req.method, req.path, req.params, req.body, req.headers);
+	Logger.debug(req.method, req.path, req.params, req.body, req.headers);
 	return next();
 };
 
@@ -68,7 +68,7 @@ export const profiler = (
 	res.on("finish", () => {
 		const end = process.hrtime(start);
 		const elapsed = (end[0] * 1e9 + end[1]) / 1e6; // Convert to milliseconds
-		logger.debug(
+		Logger.debug(
 			`Request: ${req.method} ${req.originalUrl} took ${elapsed}ms`
 		);
 	});

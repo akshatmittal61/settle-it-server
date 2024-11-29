@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { dbUri } from "../constants";
-import { logger } from "../log";
+import { Logger } from "../log";
 
 declare global {
 	// eslint-disable-next-line no-var
@@ -23,15 +23,15 @@ class DatabaseManager {
 				!global.mongoose.conn.connection.db ||
 				global.mongoose.conn.connections[0].readyState !== 1
 			) {
-				logger.info("MongoDB is not connected");
+				Logger.info("MongoDB is not connected");
 				this.connect();
 				return false;
 			}
 			global.mongoose.conn.connection.db.command({ ping: 1 });
-			logger.info("MongoDB ping succeeded");
+			Logger.info("MongoDB ping succeeded");
 			return true;
 		} catch {
-			logger.info("MongoDB ping failed");
+			Logger.info("MongoDB ping failed");
 			return false;
 		}
 	}
@@ -42,7 +42,7 @@ class DatabaseManager {
 			global.mongoose.conn.connection.db &&
 			global.mongoose.conn.connections[0].readyState === 1
 		) {
-			logger.info("MongoDB is already connected");
+			Logger.info("MongoDB is already connected");
 			return global.mongoose.conn;
 		}
 
@@ -52,16 +52,16 @@ class DatabaseManager {
 				global.mongoose.promise = mongoose.connect(dbUri, {
 					heartbeatFrequencyMS: 10000,
 				});
-				logger.debug("Connecting to MongoDB");
+				Logger.debug("Connecting to MongoDB");
 				global.mongoose.conn = await global.mongoose.promise;
 				if (global.mongoose.conn.connections[0].readyState != 1) {
 					await new Promise<void>((resolve) => {
 						mongoose.connection.once("connected", () => {
-							logger.info("MongoDB connected in cb");
+							Logger.info("MongoDB connected in cb");
 							resolve();
 						});
 						mongoose.connection.on("error", (error: any) => {
-							logger.error(
+							Logger.error(
 								"Error connecting to MongoDB in cb",
 								error.message
 							);
@@ -69,10 +69,10 @@ class DatabaseManager {
 						});
 					});
 				}
-				logger.info("MongoDB connected");
+				Logger.info("MongoDB connected");
 				return global.mongoose.conn;
 			} catch (error: any) {
-				logger.error(
+				Logger.error(
 					"Error connecting to MongoDB in connect",
 					error.message
 				);
@@ -86,14 +86,14 @@ class DatabaseManager {
 
 	public async disconnect() {
 		if (!global.mongoose.conn) {
-			logger.info("MongoDB is already disconnected");
+			Logger.info("MongoDB is already disconnected");
 			return;
 		}
-		logger.info("Disconnecting from MongoDB");
+		Logger.info("Disconnecting from MongoDB");
 		await mongoose.disconnect();
 		global.mongoose.conn = null;
 		global.mongoose.promise = null;
-		logger.info("MongoDB disconnected");
+		Logger.info("MongoDB disconnected");
 	}
 
 	public isReady() {
