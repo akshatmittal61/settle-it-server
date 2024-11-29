@@ -1,7 +1,7 @@
 import express from "express";
-import { PORT } from "./config";
+import { dbUri, PORT } from "./config";
 import { ServerController } from "./controllers";
-import { db } from "./db";
+import { createDbContainer } from "./db";
 import { Logger } from "./log";
 import {
 	cors,
@@ -13,32 +13,57 @@ import {
 } from "./middlewares";
 import { apiRouter } from "./routes";
 
-const app = express();
+export class Server {
+	private static app = express();
+	private static port = PORT;
+	private container;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(tracer);
-app.use(cors);
-app.use(parseCookies);
-app.use(profiler);
-
-app.get("/api/health", ServerController.health);
-app.get("/api/heartbeat", ServerController.heartbeat);
-app.use(useDb);
-app.use("/api/v1", apiRouter);
-app.use(errorHandler);
-
-const init = async () => {
-	Logger.info(`Server listening on port ${PORT}`);
-	const connectionStatus = await db.connect();
-	if (connectionStatus) {
-		Logger.info("MongoDB connected");
-	} else {
-		Logger.error("Database connection failed");
-		Logger.info("Server is running without database");
+	public constructor(dbUri: string) {
+		this.container = createDbContainer(dbUri);
 	}
-};
 
-app.listen(PORT, () => {
-	init();
-});
+	public static bindMiddlewares() {
+		Server.app.use(express.json());
+		Server.app.use(express.urlencoded({ extended: true }));
+		Server.app.use(tracer);
+		Server.app.use(cors);
+		Server.app.use(parseCookies);
+		Server.app.use(profiler);
+	}
+
+	public createRouter() {
+		Server.app.get(
+			"/api/health",
+			ServerController.health(this.container.db)
+		);
+		Server.app.get(
+			"/api/heartbeat",
+			ServerController.heartbeat(this.container.db)
+		);
+		Server.app.use(useDb(this.container.db));
+		Server.app.use("/api/v1", apiRouter);
+		Server.app.use(errorHandler);
+	}
+
+	public async connectDb() {
+		const connectionStatus = await this.container.db.connect();
+		if (connectionStatus) {
+			Logger.info("MongoDB connected");
+		} else {
+			Logger.error("Database connection failed");
+			Logger.info("Server is running without database");
+		}
+	}
+
+	public start() {
+		Server.bindMiddlewares();
+		this.createRouter();
+		this.connectDb();
+		Server.app.listen(Server.port, () => {
+			Logger.info(`Server listening on port ${Server.port}`);
+		});
+	}
+}
+
+const server = new Server(dbUri);
+server.start();

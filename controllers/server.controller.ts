@@ -1,36 +1,35 @@
 import { HTTP } from "../constants";
-import { db } from "../db";
+import { DatabaseManager } from "../db";
 import { ApiRequest, ApiResponse } from "../types";
 
 export class ServerController {
-	public static async health(_: ApiRequest, res: ApiResponse) {
-		try {
-			if (db.isReady() === false) {
-				throw new Error("Database connection failed");
+	public static health =
+		(db: DatabaseManager) => (_: ApiRequest, res: ApiResponse) => {
+			if (db.isConnected() === false) {
+				return res
+					.status(HTTP.status.SERVICE_UNAVAILABLE)
+					.json({ message: HTTP.message.DB_CONNECTION_ERROR });
 			}
-		} catch {
+			const payload = {
+				identity: process.pid,
+				uptime: process.uptime(),
+				timestamp: new Date().toISOString(),
+				database: db.isConnected(),
+			};
 			return res
-				.status(HTTP.status.SERVICE_UNAVAILABLE)
-				.json({ message: HTTP.message.DB_CONNECTION_ERROR });
-		}
-		const payload = {
-			identity: process.pid,
-			uptime: process.uptime(),
-			timestamp: new Date().toISOString(),
+				.status(HTTP.status.SUCCESS)
+				.json({ message: HTTP.message.HEALTHY_API, data: payload });
 		};
-		return res
-			.status(HTTP.status.SUCCESS)
-			.json({ message: HTTP.message.HEALTHY_API, data: payload });
-	}
-	public static async heartbeat(_: ApiRequest, res: ApiResponse) {
-		const payload = {
-			identity: process.pid,
-			uptime: process.uptime(),
-			timestamp: new Date().toISOString(),
-			database: db.status(),
+	public static heartbeat =
+		(db: DatabaseManager) => (_: ApiRequest, res: ApiResponse) => {
+			const payload = {
+				identity: process.pid,
+				uptime: process.uptime(),
+				timestamp: new Date().toISOString(),
+				database: db.isConnected(),
+			};
+			return res
+				.status(HTTP.status.SUCCESS)
+				.json({ message: HTTP.message.HEARTBEAT, data: payload });
 		};
-		return res
-			.status(HTTP.status.SUCCESS)
-			.json({ message: HTTP.message.HEARTBEAT, data: payload });
-	}
 }
