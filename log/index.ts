@@ -1,7 +1,8 @@
 /* eslint-disable no-console */
 import fs from "fs";
+import { nodeEnv } from "../config";
+import { logsBaseUrl, NODE_ENV, serviceName } from "../constants";
 
-const logsBaseUrl: string = "logs";
 type LOG_LEVEL =
 	| "log"
 	| "info"
@@ -60,24 +61,24 @@ export class Logger {
 				return console.log;
 		}
 	}
-	private static getMessage(...messages: Array<any>) {
+	private static getMessage(...messages: Array<any>): string {
 		const message = messages
 			.map((m) =>
 				typeof m === "string"
-					? m
+					? `"${m}"`
 					: typeof m === "object"
 						? JSON.stringify(m)
 						: m
 			)
-			.map((m) => m.toString())
-			.join(" ");
+			.map((m) => m.toString());
 		return `${message}`;
 	}
 	private static getMessageToLog(level: LOG_LEVEL, ...messages: Array<any>) {
 		const timestamp = Logger.getTimestamp();
-		const message = Logger.getMessage(...messages);
 		const logLevel = Logger.getLevel(level);
-		const messageToLog = `[${timestamp}] [${logLevel}] ${message}`;
+		const message = Logger.getMessage(...messages);
+		const service = serviceName;
+		const messageToLog = `[${service}] [${timestamp}] [${logLevel}] [${message}]\n`;
 		return messageToLog;
 	}
 	private static writeToFile(log: string) {
@@ -98,13 +99,12 @@ export class Logger {
 		const method = Logger.getConsoleMethod(level);
 		method(color, message);
 	}
-	private static logMessages = (
-		level: LOG_LEVEL,
-		...messages: Array<any>
-	) => {
-		const message = Logger.getMessageToLog(level, messages);
-		Logger.writeToConsole(level, message);
-		Logger.writeToFile(message);
+	private static logMessages = (level: LOG_LEVEL, messages: Array<any>) => {
+		const message = Logger.getMessageToLog(level, ...messages);
+		if (nodeEnv !== NODE_ENV.test) {
+			Logger.writeToConsole(level, message);
+			Logger.writeToFile(message);
+		}
 	};
 
 	public static info(...messages: Array<any>) {

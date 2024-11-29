@@ -1,6 +1,7 @@
-import { url } from "../config";
+import { service, url } from "../config";
 
 export const logsBaseUrl: string = "logs";
+export const serviceName = service;
 
 export const frontendBaseUrl: string = url.frontend;
 export const backendBaseUrl: string = url.backend;

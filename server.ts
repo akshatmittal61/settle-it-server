@@ -23,8 +23,8 @@ app.use(parseCookies);
 app.use(profiler);
 
 app.get("/api/health", ServerController.health);
-app.use(useDb);
 app.get("/api/heartbeat", ServerController.heartbeat);
+app.use(useDb);
 app.use("/api/v1", apiRouter);
 app.use(errorHandler);
 
