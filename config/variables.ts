@@ -4,7 +4,7 @@ import { T_NODE_ENV } from "../types";
 config();
 
 export const service: string = "settle-it";
-export const PORT = process.env.PORT || 4000;
+export const PORT: number = +(process.env.PORT || 4000);
 export const dbUri = process.env.DB_URI || "mongodb://localhost:27017/";
 
 type T_URL = "db" | "frontend" | "backend";
