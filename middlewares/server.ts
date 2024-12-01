@@ -1,7 +1,7 @@
 import { default as corsMiddleware } from "cors";
 import { NextFunction } from "express";
+import { DatabaseManager } from "../connections";
 import { frontendBaseUrl, HTTP } from "../constants";
-import { DatabaseManager } from "../db";
 import { Logger } from "../log";
 import { ApiRequest, ApiResponse } from "../types";
 

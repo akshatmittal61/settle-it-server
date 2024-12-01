@@ -1,5 +1,5 @@
+import { DatabaseManager } from "../connections";
 import { HTTP } from "../constants";
-import { DatabaseManager } from "../db";
 import { ApiRequest, ApiResponse } from "../types";
 
 export class ServerController {

@@ -1,4 +1,4 @@
-import { DatabaseManager } from "./base";
+import { DatabaseManager } from "../connections";
 import { Container } from "./types";
 
 export const createDbContainer = (dbUri: string): Container => {

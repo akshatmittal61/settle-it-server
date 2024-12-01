@@ -51,6 +51,7 @@
 		"lint": "eslint .",
 		"prepare": "husky",
 		"test": "DOTENV_CONFIG_PATH=.env.test jest tests/ --coverage --setupFiles=dotenv/config",
-		"test:watch": "jest --watch"
+		"test:watch": "jest --watch",
+		"clean": "rm -rf build && rm -rf node_modules && yarn"
 	}
 }

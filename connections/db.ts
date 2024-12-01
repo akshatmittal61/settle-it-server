@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
+import { DatabaseManagerConfig } from "../db";
 import { DbConnectionError } from "../errors";
 import { Logger } from "../log";
-import { DatabaseManagerConfig } from "./types";
 
 export class DatabaseManager {
 	private config: DatabaseManagerConfig;

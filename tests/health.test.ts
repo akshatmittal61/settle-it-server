@@ -1,52 +1,44 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
 import request from "supertest";
-import { Server } from "../connections";
+import { TestSuite } from "../connections";
 
-describe("Health API", () => {
-	// let server: Server;
-	let mongoServer: MongoMemoryServer;
-	let dbUri: string;
+describe("Server Health", () => {
+	const suite: TestSuite = new TestSuite();
 
 	beforeAll(async () => {
-		mongoServer = await MongoMemoryServer.create();
-		dbUri = mongoServer.getUri();
+		await suite.init();
 	});
 
 	afterAll(async () => {
-		await mongoServer.stop();
+		await suite.stop();
 	});
 
-	test("GET /health - should return 200", async () => {
-		const server = new Server(0, dbUri);
-		await server.start();
+	suite.testCase("GET /health - should return 200", async (server) => {
 		const response = await request(server.getApp()).get("/api/health");
 		expect(response.status).toBe(200);
-		server.stop();
 	});
 
-	test("GET /health - should return 503 when db is not connected", async () => {
-		const server = new Server(0, dbUri);
-		await server.start();
-		await server.disconnectDb();
-		const response = await request(server.getApp()).get("/api/health");
-		expect(response.status).toBe(503);
-		server.stop();
-	});
+	suite.testCase(
+		"GET /health - should return 503 when db is not connected",
+		async (server) => {
+			await server.disconnectDb();
+			const response = await request(server.getApp()).get("/api/health");
+			expect(response.status).toBe(503);
+		}
+	);
 
-	test("GET /heartbeat - should return 200", async () => {
-		const server = new Server(0, dbUri);
-		await server.start();
+	suite.testCase("GET /heartbeat - should return 200", async (server) => {
 		const response = await request(server.getApp()).get("/api/heartbeat");
 		expect(response.status).toBe(200);
-		server.stop();
 	});
 
-	test("GET /heartbeat - should return 200 even when db is not connected", async () => {
-		const server = new Server(0, dbUri);
-		await server.start();
-		await server.disconnectDb();
-		const response = await request(server.getApp()).get("/api/heartbeat");
-		expect(response.status).toBe(200);
-		server.stop();
-	});
+	suite.testCase(
+		"GET /heartbeat - should return 200 even when db is not connected",
+		async (server) => {
+			await server.disconnectDb();
+			const response = await request(server.getApp()).get(
+				"/api/heartbeat"
+			);
+			expect(response.status).toBe(200);
+		}
+	);
 });
