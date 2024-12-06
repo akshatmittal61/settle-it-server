@@ -74,6 +74,9 @@ router
 router
 	.route("/groups/:groupId/expenses/:expenseId/settle")
 	.patch(authenticatedRoute, isGroupMember, ExpenseController.settleExpense);
+router
+	.route("/expenses")
+	.get(authenticatedRoute, ExpenseController.getUsersExpenses);
 
 // Member routes
 router

@@ -56,6 +56,7 @@ class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 	public async find(query: FilterQuery<Expense>): Promise<IExpense[] | null> {
 		const res = await this.model
 			.find<Expense>(query)
+			.sort({ createdAt: -1 })
 			.populate("groupId paidBy createdBy");
 		const parsedRes = res.map(this.parser).filter((obj) => obj !== null);
 		if (parsedRes.length > 0) return parsedRes;
@@ -107,6 +108,7 @@ class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 	): Promise<Array<IExpense>> {
 		const res = await this.model
 			.find<Expense>({ groupId })
+			.sort({ createdAt: -1 })
 			.populate("paidBy createdBy groupId")
 			.populate({
 				path: "groupId",

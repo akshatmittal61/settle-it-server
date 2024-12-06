@@ -63,9 +63,9 @@ export class Server {
 	public async start() {
 		this.bindMiddlewares();
 		this.createRouter();
-		await this.connectDb();
 		this.instance = this.app.listen(this.port, () => {
 			Logger.info(`Server listening on port ${this.port}`);
+			this.connectDb();
 		});
 	}
 
