@@ -2,6 +2,7 @@ import {
 	AdminController,
 	AuthController,
 	ExpenseController,
+	FriendController,
 	GroupController,
 	MemberController,
 	UserController,
@@ -93,5 +94,8 @@ router
 		isGroupMember,
 		MemberController.settleMemberInExpense
 	);
+router
+	.route("/friends")
+	.get(authenticatedRoute, FriendController.getUserFriends);
 
 export const apiRouter = wrapper(router);
