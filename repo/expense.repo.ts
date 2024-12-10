@@ -108,7 +108,7 @@ class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 	): Promise<Array<IExpense>> {
 		const res = await this.model
 			.find<Expense>({ groupId })
-			.sort({ createdAt: -1 })
+			.sort({ paidOn: -1 })
 			.populate("paidBy createdBy groupId")
 			.populate({
 				path: "groupId",
