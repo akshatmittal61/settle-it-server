@@ -2,6 +2,7 @@ import {
 	T_API_METHODS,
 	T_EMAIL_TEMPLATE,
 	T_EXPENSE_STATUS,
+	T_NODE_ENV,
 	T_OTP_STATUS,
 	T_USER_STATUS,
 } from "../types";
@@ -31,4 +32,10 @@ export const emailTemplates = getEnumeration<T_EMAIL_TEMPLATE>([
 	"NEW_USER_ONBOARDED",
 	"USER_INVITED",
 	"USER_ADDED_TO_GROUP",
+]);
+
+export const NODE_ENV = getEnumeration<T_NODE_ENV>([
+	"development",
+	"test",
+	"production",
 ]);

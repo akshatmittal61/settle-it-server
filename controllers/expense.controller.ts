@@ -10,6 +10,14 @@ import {
 } from "../utils";
 
 export class ExpenseController {
+	public static async getUsersExpenses(req: ApiRequest, res: ApiResponse) {
+		const loggedInUserId = genericParse(getNonEmptyString, req.user?.id);
+		const expenses =
+			await ExpenseService.getExpensesForUser(loggedInUserId);
+		return res
+			.status(HTTP.status.SUCCESS)
+			.json({ message: HTTP.message.SUCCESS, data: expenses });
+	}
 	public static async createExpense(req: ApiRequest, res: ApiResponse) {
 		const loggedInUserId = genericParse(getNonEmptyString, req.user?.id);
 		const title = genericParse(getNonEmptyString, req.body.title);

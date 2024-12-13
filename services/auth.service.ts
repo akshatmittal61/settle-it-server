@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { jwtSecret } from "../config";
 import { HTTP, OTP_STATUS, USER_STATUS } from "../constants";
 import { ApiError } from "../errors";
-import { logger } from "../log";
+import { Logger } from "../log";
 import { otpRepo, userRepo } from "../repo";
 import { IUser } from "../types";
 import { genericParse, getNonEmptyString } from "../utils";
@@ -19,7 +19,7 @@ export class AuthService {
 			const foundUser = await UserService.getUserById(userId);
 			return foundUser;
 		} catch (error) {
-			logger.error(error);
+			Logger.error(error);
 			return null;
 		}
 	}

@@ -48,6 +48,7 @@ class GroupRepo extends BaseRepo<Group, IGroup> {
 	public async find(query: FilterQuery<Group>): Promise<IGroup[] | null> {
 		const res = await this.model
 			.find<Group>(query)
+			.sort({ createdAt: -1 })
 			.populate("members createdBy");
 		const parsedRes = res.map(this.parser).filter((obj) => obj !== null);
 		if (parsedRes.length > 0) return parsedRes;

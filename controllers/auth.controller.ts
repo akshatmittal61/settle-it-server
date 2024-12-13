@@ -1,6 +1,6 @@
 import { HTTP } from "../constants";
 import { ApiError } from "../errors";
-import { logger } from "../log";
+import { Logger } from "../log";
 import { AuthService } from "../services";
 import { ApiRequest, ApiResponse } from "../types";
 import { genericParse, getNonEmptyString } from "../utils";
@@ -25,12 +25,12 @@ export class AuthController {
 			.json({ message: "OTP verified successfully" });
 	}
 	public static async login(req: ApiRequest, res: ApiResponse) {
-		logger.debug(req.body);
+		Logger.debug(req.body);
 		const email = genericParse(getNonEmptyString, req.body.email);
 		const otp = genericParse(getNonEmptyString, req.body.otp);
 		const { token, user, isNew } = await AuthService.login(email, otp);
 		res.setHeader("x-auth-token", token);
-		logger.debug(token, user, isNew);
+		Logger.debug(token, user, isNew);
 		const responseStatus = isNew
 			? HTTP.status.CREATED
 			: HTTP.status.SUCCESS;

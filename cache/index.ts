@@ -1,7 +1,7 @@
-import { CHECK_INTERVAL, TTL_SECONDS } from "../constants";
-import { logger } from "../log";
-import { CacheParameter } from "../types";
 import NodeCache from "node-cache";
+import { CHECK_INTERVAL, TTL_SECONDS } from "../constants";
+import { Logger } from "../log";
+import { CacheParameter } from "../types";
 
 class Cache {
 	private cache: NodeCache;
@@ -58,7 +58,7 @@ class Cache {
 			if (cachedValue) {
 				return cachedValue;
 			}
-			logger.debug(`Cache miss for ${key}`);
+			Logger.debug(`Cache miss for ${key}`);
 			const newValue = await callback();
 			this.set(key, newValue, ttl);
 			return newValue;

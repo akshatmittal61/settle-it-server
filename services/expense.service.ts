@@ -1,7 +1,7 @@
 import { cache, getCacheKey } from "../cache";
 import { cacheParameter, EXPENSE_STATUS, HTTP } from "../constants";
 import { ApiError } from "../errors";
-import { expenseRepo, groupRepo, memberRepo } from "../repo";
+import { expenseRepo, memberRepo } from "../repo";
 import {
 	CreateModel,
 	Expense,
@@ -26,13 +26,9 @@ export class ExpenseService {
 	public static async getExpensesForUser(
 		userId: string
 	): Promise<Array<IExpense>> {
-		const groups = await groupRepo.find({
-			members: { $in: [userId] },
-		});
+		const groups = await GroupService.getGroupsUserIsPartOf(userId);
 		const groupIds = groups ? groups.map((group) => group.id) : [];
-		const expenses = await expenseRepo.find({
-			groupId: { $in: groupIds },
-		});
+		const expenses = await expenseRepo.getExpensesForGroups(groupIds);
 		if (!expenses) return [];
 		return expenses;
 	}
