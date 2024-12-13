@@ -122,6 +122,25 @@ class ExpenseRepo extends BaseRepo<Expense, IExpense> {
 		return expenses;
 	}
 
+	public async getExpensesForGroups(
+		groupIds: Array<string>
+	): Promise<Array<IExpense>> {
+		const res = await this.model
+			.find<Expense>({ groupId: { $in: groupIds } })
+			.sort({ paidOn: -1 })
+			.populate("paidBy createdBy groupId")
+			.populate({
+				path: "groupId",
+				populate: {
+					path: "members createdBy",
+				},
+			});
+		const expenses: Array<IExpense> = res
+			.map(this.parser)
+			.map(getNonNullValue);
+		return expenses;
+	}
+
 	public async getExpenditureForGroup(groupId: string): Promise<number> {
 		const result = await this.model.aggregate([
 			{
