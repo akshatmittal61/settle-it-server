@@ -268,13 +268,15 @@ class MemberRepo extends BaseRepo<Member, IMember> {
 				},
 			},
 		]);
-		return result.map((obj: any) => ({
-			...obj,
-			from: getObjectFromMongoResponse<IUser>(obj.from),
-			to: getObjectFromMongoResponse<IUser>(obj.to),
-			owed: getNumber(obj.owed),
-			paid: getNumber(obj.paid),
-		}));
+		return result
+			.map((obj: any) => ({
+				...obj,
+				from: getObjectFromMongoResponse<IUser>(obj.from),
+				to: getObjectFromMongoResponse<IUser>(obj.to),
+				owed: getNumber(obj.owed),
+				paid: getNumber(obj.paid),
+			}))
+			.filter((obj) => obj.from.id !== obj.to.id);
 	}
 }
 
