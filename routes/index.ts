@@ -15,7 +15,6 @@ router.route("/admin/groups").get(adminRoute, AdminController.getAllGroups);
 router.route("/admin/users").get(adminRoute, AdminController.getAllUsers);
 
 // Auth routes
-router.route("/auth/login").post(AuthController.login);
 router.route("/auth/verify").get(authenticatedRoute, AuthController.verify);
 router.route("/auth/logout").get(authenticatedRoute, AuthController.logout);
 router.route("/auth/otp/request").post(AuthController.requestOtp);

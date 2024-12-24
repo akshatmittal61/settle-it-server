@@ -1,14 +1,14 @@
 import { HTTP } from "../constants";
 import { ApiError } from "../errors";
 import { Logger } from "../log";
-import { AuthService } from "../services";
+import { OtpService } from "../services";
 import { ApiRequest, ApiResponse } from "../types";
 import { genericParse, getNonEmptyString } from "../utils";
 
 export class AuthController {
 	public static async requestOtp(req: ApiRequest, res: ApiResponse) {
 		const email = getNonEmptyString(req.body.email);
-		await AuthService.requestOtpWithEmail(email);
+		await OtpService.requestOtpWithEmail(email);
 		return res
 			.status(HTTP.status.SUCCESS)
 			.json({ message: "OTP sent successfully" });
@@ -19,16 +19,10 @@ export class AuthController {
 		if (!otp) {
 			throw new ApiError(HTTP.status.BAD_REQUEST, "Invalid OTP");
 		}
-		await AuthService.verifyOtpWithEmail(email, otp);
-		return res
-			.status(HTTP.status.SUCCESS)
-			.json({ message: "OTP verified successfully" });
-	}
-	public static async login(req: ApiRequest, res: ApiResponse) {
-		Logger.debug(req.body);
-		const email = genericParse(getNonEmptyString, req.body.email);
-		const otp = genericParse(getNonEmptyString, req.body.otp);
-		const { token, user, isNew } = await AuthService.login(email, otp);
+		const { token, user, isNew } = await OtpService.verifyOtpWithEmail(
+			email,
+			otp
+		);
 		res.setHeader("x-auth-token", token);
 		Logger.debug(token, user, isNew);
 		const responseStatus = isNew
