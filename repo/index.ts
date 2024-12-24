@@ -1,3 +1,4 @@
+export * from "./auth.repo";
 export * from "./expense.repo";
 export * from "./group.repo";
 export * from "./member.repo";
