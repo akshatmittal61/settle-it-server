@@ -23,7 +23,7 @@ export class UserService {
 		);
 		return user;
 	}
-	public static async findOrCreateUserByEmail(
+	public static async findOrCreateUser(
 		body: CreateModel<User>
 	): Promise<{ user: IUser; isNew: boolean }> {
 		const email = genericParse(getNonEmptyString, body.email);

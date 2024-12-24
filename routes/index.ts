@@ -23,6 +23,8 @@ router.route("/auth/verify").get(authenticatedRoute, AuthController.verify);
 router.route("/auth/logout").get(authenticatedRoute, AuthController.logout);
 router.route("/auth/otp/request").post(AuthController.requestOtp);
 router.route("/auth/otp/verify").post(AuthController.verifyOtp);
+router.post("/oauth/google/verify", AuthController.verifyOAuthSignIn);
+router.post("/oauth/google/continue", AuthController.continueOAuthWithGoogle);
 
 // User routes
 router

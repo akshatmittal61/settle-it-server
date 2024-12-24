@@ -55,11 +55,9 @@ export class OtpService {
 			throw new ApiError(HTTP.status.BAD_REQUEST, "Invalid OTP provided");
 		await otpRepo.update({ email }, { status: OTP_STATUS.EXPIRED });
 		// search in user table for email
-		const { user: currentUser, isNew } =
-			await UserService.findOrCreateUserByEmail({
-				email,
-				status: USER_STATUS.JOINED,
-			});
+		const { user: currentUser, isNew } = await UserService.findOrCreateUser(
+			{ email, status: USER_STATUS.JOINED }
+		);
 		if (currentUser.status === USER_STATUS.INVITED) {
 			await userRepo.update(
 				{ id: currentUser.id },
