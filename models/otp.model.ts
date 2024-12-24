@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { OtpTemplate } from "../constants";
+import { OtpTemplate } from "../templates";
 import { Otp } from "../types";
 
 const OtpSchema = new mongoose.Schema(OtpTemplate, { timestamps: true });

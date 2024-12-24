@@ -1,4 +1,4 @@
-import { ObjectId } from "../../types";
+import { ObjectId } from "../types";
 
 export const MemberTemplate = {
 	userId: {

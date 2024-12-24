@@ -1,4 +1,4 @@
-import { OTP_STATUS } from "../enum";
+import { OTP_STATUS } from "../constants";
 
 export const OtpTemplate = {
 	email: {

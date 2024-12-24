@@ -1,6 +1,5 @@
-import { ObjectId } from "../../types";
-import { USER_STATUS } from "../enum";
-import { fallbackAssets } from "../variables";
+import { fallbackAssets, USER_STATUS } from "../constants";
+import { ObjectId } from "../types";
 
 export const UserTemplate = {
 	name: {

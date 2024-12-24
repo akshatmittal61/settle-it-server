@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { ExpenseTemplate } from "../constants";
+import { ExpenseTemplate } from "../templates";
 import { Expense } from "../types";
 
 const ExpenseSchema = new mongoose.Schema(ExpenseTemplate, {

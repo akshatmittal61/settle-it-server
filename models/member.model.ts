@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { MemberTemplate } from "../constants";
+import { MemberTemplate } from "../templates";
 import { Member } from "../types";
 
 const MemberSchema = new mongoose.Schema(MemberTemplate, {
