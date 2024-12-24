@@ -13,6 +13,17 @@ export type User = {
 	updatedAt: string;
 };
 
+export type AuthMapping = {
+	id: string;
+	identifier: string;
+	providerId: string;
+	providerName: string;
+	misc?: any;
+	user: string | null;
+	createdAt: Date;
+	updatedAt: Date;
+};
+
 export type Expense = {
 	id: string;
 	title: string;
