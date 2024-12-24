@@ -61,7 +61,12 @@ export class OtpService {
 				{ status: USER_STATUS.JOINED }
 			);
 		}
-		const token = AuthService.generateToken(`${currentUser.id}`);
+		const authMapping = await AuthService.findOrCreateAuthMapping(
+			email,
+			{ id: currentUser.id, name: "otp" },
+			currentUser.id
+		);
+		const token = AuthService.generateToken(`${authMapping.id}`);
 		return { token, user: currentUser, isNew };
 	}
 	public static generate(): string {
