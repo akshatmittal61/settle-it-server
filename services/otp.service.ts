@@ -31,7 +31,12 @@ export class OtpService {
 	public static async verifyOtpWithEmail(
 		email: string,
 		otp: string
-	): Promise<{ token: string; user: IUser; isNew: boolean }> {
+	): Promise<{
+		accessToken: string;
+		refreshToken: string;
+		user: IUser;
+		isNew: boolean;
+	}> {
 		const foundOtp = await otpRepo.findOne({ email });
 		if (!foundOtp) {
 			throw new ApiError(
@@ -66,8 +71,10 @@ export class OtpService {
 			{ id: currentUser.id, name: "otp" },
 			currentUser.id
 		);
-		const token = AuthService.generateToken(`${authMapping.id}`);
-		return { token, user: currentUser, isNew };
+		const { accessToken, refreshToken } = AuthService.generateTokens(
+			`${authMapping.id}`
+		);
+		return { accessToken, refreshToken, user: currentUser, isNew };
 	}
 	public static generate(): string {
 		return otpGenerator.generate(6, {

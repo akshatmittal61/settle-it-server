@@ -19,12 +19,11 @@ export class AuthController {
 		if (!otp) {
 			throw new ApiError(HTTP.status.BAD_REQUEST, "Invalid OTP");
 		}
-		const { token, user, isNew } = await OtpService.verifyOtpWithEmail(
-			email,
-			otp
-		);
-		res.setHeader("x-auth-token", token);
-		Logger.debug(token, user, isNew);
+		const { accessToken, refreshToken, user, isNew } =
+			await OtpService.verifyOtpWithEmail(email, otp);
+		res.setHeader("x-auth-access-token", accessToken);
+		res.setHeader("x-auth-refresh-token", refreshToken);
+		Logger.debug(accessToken, refreshToken, user, isNew);
 		const responseStatus = isNew
 			? HTTP.status.CREATED
 			: HTTP.status.SUCCESS;

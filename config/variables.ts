@@ -23,7 +23,11 @@ export const url: Record<T_URL, string> = {
 	),
 };
 
-export const jwtSecret: string = configService.get("JWT_SECRET");
+export const jwtSecret = Object.freeze({
+	authRefresh: configService.get("JWT_AUTH_REFRESH_SECRET"),
+	authAccess: configService.get("JWT_AUTH_ACCESS_SECRET"),
+	oauthValidator: configService.get("JWT_OAUTH_VALIDATOR_SECRET"),
+});
 
 export const nodeEnv = configService.safeGet(
 	() => configService.get("NODE_ENV") as T_NODE_ENV,

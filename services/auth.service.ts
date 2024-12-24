@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import jwt, { TokenExpiredError } from "jsonwebtoken";
 import { jwtSecret } from "../config";
 import { Logger } from "../log";
 import { authRepo } from "../repo";
@@ -28,23 +28,6 @@ export class AuthService {
 			user,
 		});
 	}
-	public static async getAuthenticatedUser(
-		token: string
-	): Promise<IUser | null> {
-		try {
-			const decoded: any = jwt.verify(token, jwtSecret);
-			Logger.debug("decoded", decoded);
-			const authMappingId = genericParse(getNonEmptyString, decoded.id);
-			Logger.debug("authMappingId", authMappingId);
-			const user =
-				await AuthService.getUserByAuthMappingId(authMappingId);
-			if (!user) return null;
-			return user;
-		} catch (error) {
-			Logger.error(error);
-			return null;
-		}
-	}
 	public static async getUserByAuthMappingId(
 		authMappingId: string
 	): Promise<IUser | null> {
@@ -58,16 +41,79 @@ export class AuthService {
 		Logger.debug("userId", userId);
 		return await UserService.getUserById(userId);
 	}
-	public static generateToken(id: string): string {
-		return jwt.sign({ id }, jwtSecret, {
-			expiresIn: "30d",
+	public static async getAuthenticatedUser({
+		accessToken,
+		refreshToken,
+	}: {
+		accessToken: string;
+		refreshToken: string;
+	}): Promise<{
+		user: IUser;
+		accessToken: string;
+		refreshToken: string;
+	} | null> {
+		try {
+			const decodedAccessToken: any = jwt.verify(
+				accessToken,
+				jwtSecret.authAccess
+			);
+			const authMappingId = genericParse(
+				getNonEmptyString,
+				decodedAccessToken.id
+			);
+			const user =
+				await AuthService.getUserByAuthMappingId(authMappingId);
+			if (!user) return null;
+			return {
+				user,
+				accessToken,
+				refreshToken,
+			};
+		} catch (error) {
+			if (!(error instanceof TokenExpiredError)) {
+				return null;
+			}
+		}
+		try {
+			const decodedRefreshToken: any = jwt.verify(
+				refreshToken,
+				jwtSecret.authRefresh
+			);
+			const authMappingId = genericParse(
+				getNonEmptyString,
+				decodedRefreshToken.id
+			);
+			const user =
+				await AuthService.getUserByAuthMappingId(authMappingId);
+			if (!user) return null;
+			const newAccessToken =
+				AuthService.generateAccessToken(authMappingId);
+			return {
+				user,
+				accessToken: newAccessToken,
+				refreshToken,
+			};
+		} catch {
+			return null;
+		}
+	}
+	public static generateRefreshToken(id: string) {
+		return jwt.sign({ id }, jwtSecret.authRefresh, {
+			expiresIn: "7d",
 		});
 	}
-	public static getCookie(token: string, isLoggedOut: boolean = false) {
-		if (isLoggedOut)
-			return "token=; HttpOnly; Path=/; Max-Age=0; SameSite=None; Secure=true";
-		return `token=${token}; HttpOnly; Path=/; Max-Age=${
-			30 * 24 * 60 * 60 * 1000
-		}; SameSite=None; Secure=true`;
+	public static generateAccessToken(id: string) {
+		return jwt.sign({ id }, jwtSecret.authAccess, {
+			expiresIn: "15m",
+		});
+	}
+	public static generateTokens(id: string): {
+		refreshToken: string;
+		accessToken: string;
+	} {
+		return {
+			refreshToken: AuthService.generateRefreshToken(id),
+			accessToken: AuthService.generateAccessToken(id),
+		};
 	}
 }

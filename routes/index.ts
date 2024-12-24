@@ -11,8 +11,12 @@ import { adminRoute, authenticatedRoute, isGroupMember } from "../middlewares";
 import { router, wrapper } from "./base";
 
 // Admin routes
-router.route("/admin/groups").get(adminRoute, AdminController.getAllGroups);
-router.route("/admin/users").get(adminRoute, AdminController.getAllUsers);
+router
+	.route("/admin/groups")
+	.get(authenticatedRoute, adminRoute, AdminController.getAllGroups);
+router
+	.route("/admin/users")
+	.get(authenticatedRoute, adminRoute, AdminController.getAllUsers);
 
 // Auth routes
 router.route("/auth/verify").get(authenticatedRoute, AuthController.verify);
