@@ -1,5 +1,5 @@
-import { ObjectId } from "../../types";
-import { fallbackAssets } from "../variables";
+import { fallbackAssets } from "../constants";
+import { ObjectId } from "../types";
 
 export const GroupTemplate = {
 	name: {

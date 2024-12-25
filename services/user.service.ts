@@ -8,7 +8,7 @@ import {
 import { ApiError } from "../errors";
 import { userRepo } from "../repo";
 import { CreateModel, IUser, User } from "../types";
-import { getNonNullValue } from "../utils";
+import { genericParse, getNonEmptyString, getNonNullValue } from "../utils";
 import { sendEmailTemplate } from "./email";
 
 export class UserService {
@@ -23,10 +23,10 @@ export class UserService {
 		);
 		return user;
 	}
-	public static async findOrCreateUserByEmail(
-		email: string,
+	public static async findOrCreateUser(
 		body: CreateModel<User>
 	): Promise<{ user: IUser; isNew: boolean }> {
+		const email = genericParse(getNonEmptyString, body.email);
 		const foundUser = await userRepo.findOne({ email });
 		if (foundUser) {
 			return { user: foundUser, isNew: false };

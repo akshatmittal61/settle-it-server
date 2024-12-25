@@ -1,52 +1,61 @@
 import { NextFunction } from "express";
 import { admins, HTTP } from "../constants";
+import { Logger } from "../log";
 import { AuthService, GroupService } from "../services";
 import { ApiRequest, ApiResponse } from "../types";
 import { genericParse, getNonEmptyString } from "../utils";
-import { Logger } from "../log";
 
 export const authenticatedRoute = async (
 	req: ApiRequest,
 	res: ApiResponse,
 	next: NextFunction
 ) => {
-	Logger.debug("Cookies", req.cookies);
-	const token = req.cookies.token;
-	if (!token) {
-		return res
-			.status(HTTP.status.UNAUTHORIZED)
-			.json({ message: "Please login to continue" });
-	}
 	try {
-		const loggedInUser = await AuthService.getAuthenticatedUser(token);
-		if (!loggedInUser) {
+		const accessToken = genericParse(
+			getNonEmptyString,
+			req.cookies.accessToken
+		);
+		const refreshToken = genericParse(
+			getNonEmptyString,
+			req.cookies.refreshToken
+		);
+		const authResponse = await AuthService.getAuthenticatedUser({
+			accessToken,
+			refreshToken,
+		});
+		if (!authResponse) {
 			return res
 				.status(HTTP.status.UNAUTHORIZED)
 				.json({ message: "Please login to continue" });
 		}
-		Logger.debug("loggedInUser", loggedInUser);
-		req.user = loggedInUser;
+		const {
+			user,
+			accessToken: newAccessToken,
+			refreshToken: newRefreshToken,
+		} = authResponse;
+		if (accessToken !== newAccessToken) {
+			res.setHeader("x-auth-access-token", newAccessToken);
+		}
+		if (refreshToken !== newRefreshToken) {
+			res.setHeader("x-auth-refresh-token", newRefreshToken);
+		}
+		req.user = user;
 		return next();
-	} catch {
+	} catch (error: any) {
+		Logger.error(error);
 		return res
 			.status(HTTP.status.UNAUTHORIZED)
-			.json({ message: "Token is not valid" });
+			.json({ message: HTTP.message.UNAUTHORIZED });
 	}
 };
 
-export const adminRoute = async (
+export const adminRoute = (
 	req: ApiRequest,
 	res: ApiResponse,
 	next: NextFunction
 ) => {
-	const token = req.cookies.token;
-	if (!token) {
-		return res
-			.status(HTTP.status.UNAUTHORIZED)
-			.json({ message: "Please login to continue" });
-	}
 	try {
-		const loggedInUser = await AuthService.getAuthenticatedUser(token);
+		const loggedInUser = req.user;
 		if (!loggedInUser) {
 			return res
 				.status(HTTP.status.UNAUTHORIZED)
@@ -61,8 +70,8 @@ export const adminRoute = async (
 		return next();
 	} catch {
 		return res
-			.status(HTTP.status.UNAUTHORIZED)
-			.json({ message: "Token is not valid" });
+			.status(HTTP.status.FORBIDDEN)
+			.json({ message: "You are not an admin" });
 	}
 };
 

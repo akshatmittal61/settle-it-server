@@ -1,3 +1,4 @@
+export * from "./auth.model";
 export * from "./expense.model";
 export * from "./group.model";
 export * from "./member.model";

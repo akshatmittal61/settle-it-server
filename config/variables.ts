@@ -1,20 +1,35 @@
-import { config } from "dotenv";
-import { T_NODE_ENV } from "../types";
+import { T_NODE_ENV, T_URL } from "../types";
+import { configService } from "./base";
 
-config();
-
-export const service: string = "settle-it";
-export const PORT: number = +(process.env.PORT || 4000);
-export const dbUri = process.env.DB_URI || "mongodb://localhost:27017/";
-
-type T_URL = "db" | "frontend" | "backend";
+export const service = configService.safeGet(
+	() => configService.get("SERVICE"),
+	"settle-it"
+);
+export const PORT = configService.safeGet(
+	() => configService.getNumber("PORT"),
+	4000
+);
+export const dbUri = configService.get("DB_URI");
 
 export const url: Record<T_URL, string> = {
-	db: process.env.DB_URI || "mongodb://localhost:27017/nextjs",
-	frontend: process.env.FRONTEND_BASE_URL || "http://localhost:3000",
-	backend: process.env.BACKEND_BASE_URL || "http://localhost:3000/api/v1",
+	db: dbUri,
+	frontend: configService.safeGet(
+		() => configService.get("FRONTEND_BASE_URL"),
+		"http://localhost:3000"
+	),
+	backend: configService.safeGet(
+		() => configService.get("BACKEND_BASE_URL"),
+		"http://localhost:3000/api/v1"
+	),
 };
 
-export const jwtSecret: string = process.env.JWT_SECRET || "secret";
-export const nodeEnv: T_NODE_ENV =
-	(process.env.NODE_ENV as T_NODE_ENV) || "development";
+export const jwtSecret = Object.freeze({
+	authRefresh: configService.get("JWT_AUTH_REFRESH_SECRET"),
+	authAccess: configService.get("JWT_AUTH_ACCESS_SECRET"),
+	oauthValidator: configService.get("JWT_OAUTH_VALIDATOR_SECRET"),
+});
+
+export const nodeEnv = configService.safeGet(
+	() => configService.get("NODE_ENV") as T_NODE_ENV,
+	"development"
+);
