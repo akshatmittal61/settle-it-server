@@ -41,3 +41,16 @@ export type IBalancesSummary = {
 	owes: Array<IOwedRecord>;
 	balances: Array<IBalance>;
 };
+
+export type Share = {
+	user: string;
+	amount: number;
+};
+
+export type IShare = {
+	user: IUser;
+	amount: number;
+	percentage: number;
+	fraction: string;
+	opacity: number;
+};

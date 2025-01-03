@@ -7,11 +7,12 @@ import {
 	Group,
 	IBalancesSummary,
 	IGroup,
+	IShare,
 	ITransaction,
 	IUser,
 	Transaction,
 } from "../types";
-import { getNonNullValue } from "../utils";
+import { getNonNullValue, simplifyFraction } from "../utils";
 import { sendEmailTemplate } from "./email";
 import { ExpenseService } from "./expense.service";
 import { UserService } from "./user.service";
@@ -592,6 +593,7 @@ export class GroupService {
 	public static async getGroupSummary(groupId: string): Promise<{
 		expenditure: number;
 		balances: IBalancesSummary;
+		shares: Array<IShare>;
 	}> {
 		const [expenditure, allTransactionsForGroup] = await Promise.all([
 			expenseRepo.getExpenditureForGroup(groupId),
@@ -616,7 +618,12 @@ export class GroupService {
 				usersMap
 			),
 		};
-		return { expenditure, balances };
+		const shares = await GroupService.getShares({
+			groupId,
+			totalAmount: expenditure,
+			usersMap,
+		});
+		return { expenditure, balances, shares };
 	}
 	public static async getAllGroupTransactions(
 		groupId: string
@@ -626,5 +633,44 @@ export class GroupService {
 			memberRepo.getAllTransactionsForGroup(groupId),
 		]);
 		return { expenditure, transactions };
+	}
+	public static async getShares({
+		groupId,
+		totalAmount,
+		usersMap,
+	}: {
+		groupId: string;
+		totalAmount: number;
+		usersMap: Map<string, IUser>;
+	}): Promise<Array<IShare>> {
+		const shares = await memberRepo.getSharesForGroup(groupId);
+		const max = Math.max(...shares.map((s) => s.amount));
+		const min = Math.min(...shares.map((s) => s.amount));
+		const range = max - min;
+		const populatedShares = shares.map((share) => {
+			return {
+				user: getNonNullValue(usersMap.get(share.user)),
+				amount: share.amount,
+				percentage: +((share.amount / totalAmount) * 100).toFixed(2),
+				fraction: simplifyFraction(
+					`${share.amount.toFixed(2)}/${totalAmount}`
+				),
+			};
+		});
+		const finalShares = populatedShares
+			.map((share) => {
+				return {
+					user: share.user,
+					amount: share.amount,
+					percentage: share.percentage,
+					fraction: share.fraction,
+					opacity:
+						range === 0
+							? 1
+							: ((share.amount - min) / range) * 0.7 + 0.3, // Scale from 0.3 to 1
+				};
+			})
+			.sort((a, b) => b.amount - a.amount);
+		return finalShares;
 	}
 }

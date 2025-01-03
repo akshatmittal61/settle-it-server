@@ -9,6 +9,7 @@ import {
 	IUser,
 	Member,
 	ObjectId,
+	Share,
 	Transaction,
 	UpdateQuery,
 } from "../types";
@@ -277,6 +278,34 @@ class MemberRepo extends BaseRepo<Member, IMember> {
 				paid: getNumber(obj.paid),
 			}))
 			.filter((obj) => obj.from.id !== obj.to.id);
+	}
+	public async getSharesForGroup(groupId: string): Promise<Array<Share>> {
+		const result = await this.model.aggregate([
+			// get members involved in this group
+			{
+				$match: {
+					groupId: new ObjectId(groupId),
+				},
+			},
+			// group member by user id
+			{
+				$group: {
+					_id: "$userId",
+					amount: { $sum: "$amount" },
+				},
+			},
+			{
+				$project: {
+					_id: 0,
+					user: "$_id",
+					amount: 1,
+				},
+			},
+		]);
+		return result.map((res) => ({
+			user: res.user.toString(),
+			amount: res.amount,
+		}));
 	}
 }
 

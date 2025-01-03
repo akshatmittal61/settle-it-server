@@ -47,3 +47,61 @@ export const isSubset = <T = any>(
 ): boolean => {
 	return subset.every((value) => superset.includes(value));
 };
+
+/**
+ * Simplifies a given fraction string to its simplest form.
+ * If the input is not a valid fraction, returns the input as is.
+ *
+ * @example
+ * simplifyFraction("4/8") // "1/2"
+ * simplifyFraction("10/5") // "2/1"
+ * simplifyFraction("3/7") // "3/7"
+ * simplifyFraction("invalid") // "invalid"
+ *
+ * @param {string} fraction - The fraction string to simplify.
+ * @returns {string} - The simplified fraction or the original input if invalid.
+ */
+
+export const simplifyFraction = (fraction: string): string => {
+	const splitted = fraction.split("/");
+	if (splitted.length !== 2 || isNaN(+splitted[0]) || isNaN(+splitted[1])) {
+		return fraction;
+	}
+	const numerator = +splitted[0];
+	const denominator = +splitted[1];
+	const divisors = [];
+	for (let i = 2; i <= Math.min(numerator, denominator); i++) {
+		if (denominator % i === 0) {
+			divisors.push(i);
+		}
+	}
+	for (let i = divisors.length - 1; i >= 0; i--) {
+		if (numerator % divisors[i] === 0) {
+			return `${numerator / divisors[i]}/${denominator / divisors[i]}`;
+		}
+	}
+	return fraction;
+};
+
+/**
+ * Maps a given number from a range [min, max] to a new range [newMin, newMax].
+ * @example
+ * mapNumberBetween(5, 0, 10, 0, 100) // 50
+ * mapNumberBetween(0, 0, 10, 0, 100) // 0
+ * mapNumberBetween(10, 0, 10, 0, 100) // 100
+ * @param {number} num - The number to map.
+ * @param {number} min - The minimum of the original range.
+ * @param {number} max - The maximum of the original range.
+ * @param {number} newMin - The minimum of the new range.
+ * @param {number} newMax - The maximum of the new range.
+ * @returns {number} The mapped number.
+ */
+export const mapNumberBetween = (
+	num: number,
+	min: number,
+	max: number,
+	newMin: number,
+	newMax: number
+): number => {
+	return ((num - min) * (newMax - newMin)) / (max - min) + newMin;
+};
