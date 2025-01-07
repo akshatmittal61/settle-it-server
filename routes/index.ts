@@ -36,6 +36,9 @@ router
 router
 	.route("/users/search")
 	.post(authenticatedRoute, UserController.searchForUsers);
+router
+	.route("/users/search/bulk")
+	.post(authenticatedRoute, UserController.searchInBulk);
 
 // Group Routes
 router
