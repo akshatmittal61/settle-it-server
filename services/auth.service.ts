@@ -104,7 +104,7 @@ export class AuthService {
 	}
 	public static generateAccessToken(id: string) {
 		return jwt.sign({ id }, jwtSecret.authAccess, {
-			expiresIn: "15m",
+			expiresIn: "1m",
 		});
 	}
 	public static generateTokens(id: string): {
