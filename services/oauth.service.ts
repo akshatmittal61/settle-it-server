@@ -76,6 +76,12 @@ export class OAuthService {
 		) {
 			await authRepo.update({ id: authMapping.id }, { user: user.id });
 		}
+		if (!isNew && user.status === USER_STATUS.INVITED) {
+			await UserService.updateUserDetails(user.id, {
+				status: USER_STATUS.JOINED,
+				avatar: picture || fallbackAssets.avatar,
+			});
+		}
 		const oauthValidatorToken = jwt.sign(
 			{ id: authMapping.id },
 			jwtSecret.oauthValidator,
