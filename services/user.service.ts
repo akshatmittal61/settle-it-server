@@ -1,4 +1,5 @@
 import { cache, getCacheKey } from "../cache";
+import { googleEmailConfig } from "../config";
 import {
 	cacheParameter,
 	emailTemplates,
@@ -307,5 +308,19 @@ export class UserService {
 			users: finalCollection,
 			message,
 		};
+	}
+	public static async sendInvitationToUsers(emails: Array<string>) {
+		const users = await Promise.all(emails.map(UserService.getUserByEmail));
+		// send invitations to users which are not registered
+		const validUsers = users.filter((user) => user !== null);
+		await UserService.inviteMany(
+			validUsers.map((user) => user.email),
+			{
+				id: "google",
+				name: "Settle It",
+				email: googleEmailConfig.email,
+				status: USER_STATUS.JOINED,
+			}
+		);
 	}
 }
