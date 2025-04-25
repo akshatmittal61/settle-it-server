@@ -451,7 +451,7 @@ export class ExpenseService {
 		}
 		const settledMember = await memberRepo.settleOne({
 			expenseId,
-			userId: memberId,
+			id: memberId,
 		});
 		if (!settledMember)
 			throw new ApiError(HTTP.status.NOT_FOUND, "Member not found");
